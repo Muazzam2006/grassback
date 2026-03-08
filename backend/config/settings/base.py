@@ -42,6 +42,7 @@ USE_TZ = True
                                                                              
 
 DJANGO_APPS = [
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -74,6 +75,29 @@ LOCAL_APPS = [
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+UNFOLD = {
+    "SITE_TITLE": "Grass MLM Admin",
+    "SITE_HEADER": "Grass MLM",
+    "SITE_SYMBOL": "inventory_2",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": False,
+    "COLORS": {
+        "primary": {
+            "50": "oklch(98.2% 0.018 155)",
+            "100": "oklch(95.3% 0.05 155)",
+            "200": "oklch(90.5% 0.095 155)",
+            "300": "oklch(84.0% 0.15 155)",
+            "400": "oklch(74.0% 0.19 155)",
+            "500": "oklch(65.0% 0.18 155)",
+            "600": "oklch(56.0% 0.16 155)",
+            "700": "oklch(47.0% 0.13 155)",
+            "800": "oklch(39.0% 0.105 155)",
+            "900": "oklch(32.0% 0.085 155)",
+            "950": "oklch(23.0% 0.06 155)",
+        },
+    },
+}
 
                                                                              
                                                                   
