@@ -2,12 +2,6 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
 class IsBonusOwnerOrAdmin(BasePermission):
-    """
-    Read-only access: bonus recipient sees own records, staff sees all.
-    Write access is unconditionally denied for all parties.
-
-    Relies on IsAuthenticated being applied first in the ViewSet.
-    """
 
     message = "You do not have permission to access this bonus."
 

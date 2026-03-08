@@ -1,7 +1,7 @@
-# Manually split from 0001 to break circular dependency with orders.
-# delivery.0001_initial → no orders dep  (Courier + DeliveryAddress)
-# orders.0001_initial   → depends on delivery.0001 (for delivery_address FK)
-# delivery.0002         → depends on orders.0001 (for OrderDelivery.order FK)
+                                                                    
+                                                                    
+                                                                            
+                                                                             
 
 import django.core.validators
 import django.db.models.deletion

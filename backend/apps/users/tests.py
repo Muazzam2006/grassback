@@ -1,16 +1,3 @@
-"""
-Production-grade tests for users app MPTT integration.
-
-Test areas:
-  1. UserStatus choices integrity
-  2. User tree construction — lft/rght/level correctness
-  3. sponsor property alias backward-compat
-  4. Ancestor/descendant MPTT queries
-  5. Circular reference validation
-  6. Bonus distribution via get_ancestors (no Python iteration)
-  7. Idempotency of distribute_order_bonuses
-  8. Tree integrity after rebuild
-"""
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -27,7 +14,6 @@ from .models import User, UserStatus
 
 
 def _make_user(phone: str, sponsor: User | None = None, **kw) -> User:
-    """Create a user without going through the REST API."""
     return User.objects.create_user(
         phone=phone,
         password="TestPass123!",
@@ -75,14 +61,9 @@ def _make_paid_order(buyer: User, amount: Decimal = Decimal("100.00")) -> Order:
         delivery_address=address,
         currency="USD",
     )
-    # COD flow: financial validity is DELIVERED.
+                                                
     Order.objects.filter(pk=order.pk).update(status=OrderStatus.DELIVERED)
     return Order.objects.get(pk=order.pk)
-
-
-# ---------------------------------------------------------------------------
-# 1. Model field tests
-# ---------------------------------------------------------------------------
 
 class UserStatusTest(TestCase):
     def test_choices(self):
@@ -90,18 +71,13 @@ class UserStatusTest(TestCase):
         self.assertEqual(values, {"NEW", "BRONZE", "SILVER", "GOLD"})
 
 
-# ---------------------------------------------------------------------------
-# 2. MPTT tree construction
-# ---------------------------------------------------------------------------
-
 class UserTreeTest(TestCase):
-    """Verify that MPTT fields are populated correctly after save."""
 
     def setUp(self):
         self.root = _make_user("+10000000001")
         self.child = _make_user("+10000000002", sponsor=self.root)
         self.grandchild = _make_user("+10000000003", sponsor=self.child)
-        # Refresh from DB to get fresh MPTT fields.
+                                                   
         self.root.refresh_from_db()
         self.child.refresh_from_db()
         self.grandchild.refresh_from_db()
@@ -116,7 +92,7 @@ class UserTreeTest(TestCase):
         self.assertEqual(self.grandchild.level, 2)
 
     def test_lft_rght_bounds(self):
-        # Root must fully envelope child which must envelope grandchild.
+                                                                        
         self.assertLess(self.root.lft, self.child.lft)
         self.assertGreater(self.root.rght, self.child.rght)
         self.assertLess(self.child.lft, self.grandchild.lft)
@@ -126,10 +102,6 @@ class UserTreeTest(TestCase):
         self.assertEqual(self.root.tree_id, self.child.tree_id)
         self.assertEqual(self.root.tree_id, self.grandchild.tree_id)
 
-
-# ---------------------------------------------------------------------------
-# 3. Backward-compat sponsor alias
-# ---------------------------------------------------------------------------
 
 class SponsorAliasTest(TestCase):
     def setUp(self):
@@ -147,10 +119,6 @@ class SponsorAliasTest(TestCase):
     def test_sponsor_none_for_root(self):
         self.assertIsNone(self.root.sponsor)
 
-
-# ---------------------------------------------------------------------------
-# 4. MPTT ancestor / descendant queries
-# ---------------------------------------------------------------------------
 
 class AncestorDescendantTest(TestCase):
     def setUp(self):
@@ -181,10 +149,6 @@ class AncestorDescendantTest(TestCase):
         self.assertFalse(self.l0.is_descendant_of(self.l3))
 
 
-# ---------------------------------------------------------------------------
-# 5. Circular reference validation
-# ---------------------------------------------------------------------------
-
 class CircularReferenceTest(TestCase):
     def test_self_sponsor_raises_validation_error(self):
         user = _make_user("+10000000030")
@@ -195,21 +159,13 @@ class CircularReferenceTest(TestCase):
     def test_descendant_as_parent_raises_validation_error(self):
         root = _make_user("+10000000031")
         child = _make_user("+10000000032", sponsor=root)
-        # Attempt to make root's parent = child (cycle).
+                                                        
         root.parent = child
         with self.assertRaises(ValidationError):
             root.clean()
 
 
-# ---------------------------------------------------------------------------
-# 6. Bonus distribution via MPTT ancestors
-# ---------------------------------------------------------------------------
-
 class BonusDistributionTest(TestCase):
-    """
-    3-level tree: gold_root → silver_mid → buyer
-    MLM rules produce bonuses at L1 (PERSONAL) and L2 (TEAM).
-    """
 
     def setUp(self):
         self.gold_root = _make_user("+10000000040", status=UserStatus.GOLD)
@@ -218,9 +174,9 @@ class BonusDistributionTest(TestCase):
         )
         self.buyer = _make_user("+10000000042", sponsor=self.silver_mid)
 
-        # L1 rule: SILVER sponsors get 5 %
+                                          
         _make_rule("SILVER", 1, Decimal("5.00"))
-        # L2 rule: GOLD sponsors get 3 % at level 2
+                                                   
         _make_rule("GOLD", 2, Decimal("3.00"))
 
         self.order = _make_paid_order(self.buyer, Decimal("200.00"))
@@ -232,7 +188,7 @@ class BonusDistributionTest(TestCase):
     def test_l1_bonus_to_silver_mid(self):
         distribute_order_bonuses(self.order)
         b = Bonus.objects.get(user=self.silver_mid, level=1, bonus_type=BonusType.PERSONAL)
-        # 5% of 200 = 10.00
+                           
         self.assertEqual(b.amount, Decimal("10.00"))
         self.assertEqual(b.status, BonusStatus.PENDING)
         self.assertEqual(b.source_user, self.buyer)
@@ -240,17 +196,13 @@ class BonusDistributionTest(TestCase):
     def test_l2_bonus_to_gold_root(self):
         distribute_order_bonuses(self.order)
         b = Bonus.objects.get(user=self.gold_root, level=2, bonus_type=BonusType.TEAM)
-        # 3% of 200 = 6.00
+                          
         self.assertEqual(b.amount, Decimal("6.00"))
 
     def test_no_bonus_for_buyer(self):
         distribute_order_bonuses(self.order)
         self.assertFalse(Bonus.objects.filter(user=self.buyer).exists())
 
-
-# ---------------------------------------------------------------------------
-# 7. Idempotency
-# ---------------------------------------------------------------------------
 
 class BonusIdempotencyTest(TestCase):
     def setUp(self):
@@ -263,31 +215,23 @@ class BonusIdempotencyTest(TestCase):
         first_run = distribute_order_bonuses(self.order)
         second_run = distribute_order_bonuses(self.order)
         self.assertEqual(len(first_run), 1)
-        self.assertEqual(len(second_run), 0)  # idempotent — no new records
+        self.assertEqual(len(second_run), 0)                               
         self.assertEqual(Bonus.objects.filter(order=self.order).count(), 1)
 
 
-# ---------------------------------------------------------------------------
-# 8. Tree rebuild integrity
-# ---------------------------------------------------------------------------
-
 class TreeRebuildTest(TransactionTestCase):
-    """
-    TransactionTestCase required because rebuild() uses raw DB-level ops
-    that may not play nicely inside a wrapped test transaction.
-    """
 
     def test_rebuild_restores_lft_rght(self):
         root = _make_user("+10000000060")
         child = _make_user("+10000000061", sponsor=root)
         grandchild = _make_user("+10000000062", sponsor=child)
 
-        # Corrupt lft/rght directly to simulate a stale import state.
+                                                                     
         User.objects.filter(pk__in=[root.pk, child.pk, grandchild.pk]).update(
             lft=0, rght=0, tree_id=0, level=0
         )
 
-        # Rebuild must restore valid nested-set values.
+                                                       
         User.objects.rebuild()
 
         root.refresh_from_db()

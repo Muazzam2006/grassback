@@ -1,25 +1,8 @@
-"""
-MLM domain models.
-
-A-4: NetworkStats was previously misplaced in apps.notifications.
-"""
 from decimal import Decimal
 
 from django.db import models
 
-
-# --------------------------------------------------------------------------- #
-#  Network read-projection (cached, async-updated)                            #
-# --------------------------------------------------------------------------- #
-
 class NetworkStats(models.Model):
-    """
-    Cached aggregates of a user's MLM network performance.
-
-    Updated asynchronously via Celery after order/bonus events.
-    MUST NOT be used as source of truth for financial calculations.
-    """
-
     user = models.OneToOneField(
         "users.User",
         on_delete=models.CASCADE,
@@ -44,21 +27,7 @@ class NetworkStats(models.Model):
         return f"NetworkStats({self.user.phone})"
 
 
-# --------------------------------------------------------------------------- #
-#  Status progression thresholds (DB-driven, no code deploys to change)       #
-# --------------------------------------------------------------------------- #
-
 class StatusThreshold(models.Model):
-    """
-    Defines the minimum personal and team turnover required for each agent
-    status level.
-
-    Only BRONZE, SILVER, and GOLD have thresholds; NEW is the implicit
-    starting state (no threshold applies).
-
-    Editing these rows in Django Admin takes effect immediately on the next
-    `promote_user_status()` call — no code deploys required.
-    """
 
     STATUS_CHOICES = [
         ("BRONZE", "Bronze"),

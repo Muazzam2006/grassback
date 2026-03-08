@@ -1,5 +1,3 @@
-
-
 from django.db import transaction
 from django.utils import timezone
 
@@ -30,23 +28,6 @@ def create_order_delivery(
     courier: Courier | None = None,
     notes: str = "",
 ) -> OrderDelivery:
-    """
-    Create an OrderDelivery for a given order.
-
-    `delivery_address` is always taken from `order.delivery_address` — the
-    address the customer entered at checkout.  There is no reason for the
-    admin to supply it again; re-entering it would be error-prone and
-    inconsistent with what the customer chose.
-
-    Fee:
-        If `delivery_fee` is None, the fee already stored on the Order at
-        checkout is reused — admin only passes it when the actual shipping
-        cost differs from the estimate.
-
-    Both the OrderDelivery row and the Order.delivery_fee snapshot are written
-    in the same atomic() block.
-    """
-    # Lock the order row; also prevents concurrent duplicate delivery creation.
     order = (
         Order.objects
         .select_for_update()
@@ -73,8 +54,7 @@ def create_order_delivery(
         delivery_fee=fee,
         notes=notes,
     )
-
-    # Keep the financial snapshot on Order in sync with the confirmed fee.
+                                                                   
     Order.objects.filter(pk=order.pk).update(delivery_fee=fee)
 
     return delivery
@@ -88,18 +68,7 @@ def update_delivery_status(
     tracking_number: str | None = None,
     notes: str = "",
 ) -> OrderDelivery:
-    """
-    Transition an OrderDelivery to a new status.
-
-    State machine:
-        PENDING → SHIPPED | CANCELLED
-        SHIPPED → DELIVERED | CANCELLED
-        DELIVERED → (terminal)
-        CANCELLED → (terminal)
-
-    Raises:
-        InvalidTransitionError: if transition is not allowed.
-    """
+    
     delivery = OrderDelivery.objects.select_for_update().get(pk=delivery.pk)
     allowed = _ALLOWED_TRANSITIONS.get(delivery.status, set())
 
@@ -136,7 +105,6 @@ def update_delivery_status(
 
 @transaction.atomic
 def assign_courier(delivery: OrderDelivery, courier: Courier) -> OrderDelivery:
-    """Assign or reassign a courier to a PENDING or SHIPPED delivery."""
     delivery = OrderDelivery.objects.select_for_update().get(pk=delivery.pk)
 
     if delivery.status not in {DeliveryStatus.PENDING, DeliveryStatus.SHIPPED}:

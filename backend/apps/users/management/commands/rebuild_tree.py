@@ -15,8 +15,6 @@ When to use
 Usage
 -----
     python manage.py rebuild_tree
-
-    # Identical outcome using the built-in django-mptt command (all models):
     python manage.py rebuild_mptt
 """
 import time
@@ -52,8 +50,7 @@ class Command(BaseCommand):
             return
 
         t0 = time.monotonic()
-        # MPTTManager.rebuild() wraps the operation in a transaction and
-        # re-computes lft/rght/tree_id/level from the parent_id adjacency list.
+
         User.objects.rebuild()
         elapsed = time.monotonic() - t0
 

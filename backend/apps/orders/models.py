@@ -1,22 +1,3 @@
-"""
-Order models — COD lifecycle (v3).
-
-OrderStatus changes (v3)
-------------------------
-Old:  PENDING → PAID → CANCELLED
-New:  CREATED → RESERVED → CONFIRMED → SHIPPED → DELIVERED → CANCELLED
-
-Financial semantics
--------------------
-- COD: there is no PAID status.  Financial validity = DELIVERED.
-- Bonuses trigger ONLY at DELIVERED (see bonuses/services.py).
-- stock is decremented when status transitions CREATED → RESERVED
-  (inside checkout_from_reservations service).
-
-delivery_address is mandatory (NOT NULL, PROTECT).
-delivery_fee is snapshotted at checkout from the user-provided value.
-grand_total = total_amount + delivery_fee (read-only property).
-"""
 import uuid
 from decimal import Decimal
 
@@ -27,23 +8,15 @@ from django.utils.translation import gettext_lazy as _
 
 
 class OrderStatus(models.TextChoices):
-    CREATED = "CREATED", _("Created")           # Order header exists, stock reserved
-    RESERVED = "RESERVED", _("Reserved")         # Reservations converted, stock decremented
-    CONFIRMED = "CONFIRMED", _("Confirmed")       # Admin confirmed, ready to pack
-    SHIPPED = "SHIPPED", _("Shipped")             # Handed to courier
-    DELIVERED = "DELIVERED", _("Delivered")       # COD received — bonuses trigger here
-    CANCELLED = "CANCELLED", _("Cancelled")       # Cancelled at any pre-DELIVERED stage
+    CREATED = "CREATED", _("Created")                                                
+    RESERVED = "RESERVED", _("Reserved")                                                    
+    CONFIRMED = "CONFIRMED", _("Confirmed")                                       
+    SHIPPED = "SHIPPED", _("Shipped")                                
+    DELIVERED = "DELIVERED", _("Delivered")                                            
+    CANCELLED = "CANCELLED", _("Cancelled")                                             
 
 
 class Order(models.Model):
-    """
-    Order header.
-
-    v3 additions:
-        delivery_address — mandatory FK to DeliveryAddress; PROTECT prevents
-                           deletion of an address that has active orders.
-        status           — 6-value COD lifecycle (replaces PENDING/PAID).
-    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -106,13 +79,6 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    """
-    Immutable line item snapshotting price at time of checkout.
-
-    v3 addition:
-        reservation — nullable FK audit trail linking the reservation that
-                      produced this item (SET_NULL so items survive reservation cleanup).
-    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(

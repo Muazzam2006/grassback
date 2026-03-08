@@ -23,7 +23,6 @@ class UserManager(BaseUserManager):
         return normalized
 
     def rebuild(self):
-        """Compatibility bridge for django-mptt rebuild API."""
         return self.model._tree_manager.rebuild()
 
     def _create_user_record(self, phone, password=None, **extra_fields):

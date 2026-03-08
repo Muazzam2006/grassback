@@ -1,15 +1,3 @@
-"""
-Order views — COD lifecycle (v3).
-
-Orders are READ-only from the user perspective.
-Creation via POST /api/v1/reservations/checkout/.
-
-Admins can advance the lifecycle via custom actions:
-  POST /api/v1/orders/{id}/confirm/
-  POST /api/v1/orders/{id}/ship/
-  POST /api/v1/orders/{id}/deliver/
-  POST /api/v1/orders/{id}/cancel/
-"""
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -38,14 +26,10 @@ class OrderViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """
-    Users: read + destroy (pre-DELIVERED only).
-    Admins: also access lifecycle transitions.
-    """
     permission_classes = [IsAuthenticated]
     lookup_field = "id"
-    # Enables ?status=CREATED / ?status=CANCELLED / etc.
-    # Uses the globally-configured DjangoFilterBackend — no extra setup needed.
+                                                        
+                                                                               
     filterset_fields = ["status"]
 
     def get_queryset(self):
@@ -71,17 +55,6 @@ class OrderViewSet(
         return OrderListSerializer
 
     def destroy(self, request, *args, **kwargs):
-        """
-        Soft-cancel an order (no hard DELETE from the database).
-
-        Using cancel_order instead of instance.delete() ensures that physical
-        stock is restored atomically for any RESERVED/CONFIRMED/SHIPPED order
-        and an audit log entry is written.
-
-        Returns 409 Conflict — not 403 — when the order is already terminal
-        (DELIVERED or CANCELLED), because the problem is resource state, not
-        permissions.
-        """
         order = self.get_object()
         try:
             cancel_order(
@@ -93,12 +66,7 @@ class OrderViewSet(
             return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    # ------------------------------------------------------------------ #
-    # Admin lifecycle transitions                                          #
-    # ------------------------------------------------------------------ #
-
     def _lifecycle_action(self, request, service_fn, **service_kwargs):
-        """Shared helper for all lifecycle transition endpoints."""
         order = self.get_object()
         note_serializer = OrderStatusTransitionSerializer(data=request.data)
         note_serializer.is_valid(raise_exception=True)
@@ -113,13 +81,11 @@ class OrderViewSet(
     @action(detail=True, methods=["post"], url_path="confirm",
             permission_classes=[IsAuthenticated, IsAdminOnly])
     def confirm(self, request, id=None):
-        """POST /orders/{id}/confirm/ — RESERVED → CONFIRMED."""
         return self._lifecycle_action(request, confirm_order)
 
     @action(detail=True, methods=["post"], url_path="ship",
             permission_classes=[IsAuthenticated, IsAdminOnly])
     def ship(self, request, id=None):
-        """POST /orders/{id}/ship/ — CONFIRMED → SHIPPED."""
         note_s = OrderStatusTransitionSerializer(data=request.data)
         note_s.is_valid(raise_exception=True)
         order = self.get_object()
@@ -137,10 +103,6 @@ class OrderViewSet(
     @action(detail=True, methods=["post"], url_path="deliver",
             permission_classes=[IsAuthenticated, IsAdminOnly])
     def deliver(self, request, id=None):
-        """
-        POST /orders/{id}/deliver/ — SHIPPED → DELIVERED.
-        Bonus pipeline is dispatched by Order post_save signal.
-        """
         order = self.get_object()
         note_s = OrderStatusTransitionSerializer(data=request.data)
         note_s.is_valid(raise_exception=True)
@@ -158,10 +120,6 @@ class OrderViewSet(
 
     @action(detail=True, methods=["post"], url_path="cancel")
     def cancel(self, request, id=None):
-        """
-        POST /orders/{id}/cancel/ — any pre-DELIVERED → CANCELLED.
-        Users can cancel their own orders; admins can cancel any.
-        """
         order = self.get_object()
         if not request.user.is_staff and order.user_id != request.user.pk:
             raise PermissionDenied("You cannot cancel this order.")

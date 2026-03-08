@@ -6,8 +6,6 @@ from .models import Reservation, ReservationStatus
 
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
-    """Read-only admin: provides visibility into active/expired reservations."""
-
     list_display = (
         "id_short",
         "user",

@@ -49,16 +49,6 @@ class OrderDeliveryDetailSerializer(serializers.ModelSerializer):
 
 
 class OrderDeliveryCreateSerializer(serializers.Serializer):
-    """
-    Input for creating a delivery task against an existing confirmed order.
-
-    `delivery_address` is NOT required — it is always taken automatically from
-    `Order.delivery_address` (the address the customer entered at checkout).
-
-    `delivery_fee` is optional.  When omitted, the fee already snapshotted on
-    the Order at checkout is reused.  Pass it explicitly when the actual
-    shipping cost differs from the estimate.
-    """
     order = serializers.UUIDField()
     delivery_fee = serializers.DecimalField(
         max_digits=14, decimal_places=2,
@@ -72,7 +62,6 @@ class OrderDeliveryCreateSerializer(serializers.Serializer):
 
 
 class DeliveryStatusUpdateSerializer(serializers.Serializer):
-    """Input for transitioning delivery status."""
     status = serializers.ChoiceField(choices=DeliveryStatus.choices)
     tracking_number = serializers.CharField(max_length=100, required=False, allow_blank=True)
     courier = serializers.UUIDField(required=False, allow_null=True)

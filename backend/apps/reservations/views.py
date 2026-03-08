@@ -1,14 +1,3 @@
-"""
-Reservation views.
-
-Endpoints
----------
-GET    /api/v1/reservations/                → list user's reservations
-POST   /api/v1/reservations/                → create reservation
-GET    /api/v1/reservations/{id}/           → detail
-POST   /api/v1/reservations/{id}/cancel/    → cancel reservation
-POST   /api/v1/reservations/checkout/       → convert reservations → Order
-"""
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -35,10 +24,6 @@ class ReservationViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    """
-    Reservations are user-scoped.  A user can only see and manage their own
-    reservations.  Admin access via Django admin only.
-    """
     permission_classes = [IsAuthenticated]
     lookup_field = "id"
 
@@ -87,15 +72,6 @@ class ReservationViewSet(
 
     @action(detail=False, methods=["post"], url_path="checkout")
     def checkout(self, request, *args, **kwargs):
-        """
-        POST /reservations/checkout/
-
-        Convert ACTIVE reservations into a RESERVED Order (COD).
-        Requires:
-          - reservation_ids: list of UUIDs
-          - delivery_address_id: UUID
-          - delivery_fee: decimal (optional, default 0)
-        """
         from apps.delivery.models import DeliveryAddress
         from apps.orders.serializers import OrderDetailSerializer
 
@@ -103,7 +79,7 @@ class ReservationViewSet(
         serializer.is_valid(raise_exception=True)
         d = serializer.validated_data
 
-        # Resolve delivery address
+                                  
         try:
             address = DeliveryAddress.objects.get(pk=d["delivery_address_id"])
         except DeliveryAddress.DoesNotExist:

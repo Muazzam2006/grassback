@@ -137,13 +137,10 @@ class User(MPTTModel, AbstractBaseUser, PermissionsMixin):
 
     @property
     def sponsor(self) -> "User | None":
-        """Read-only alias for `parent`. Allows existing code using
-        `user.sponsor` to continue working without modification."""
         return self.parent
 
     @property
     def sponsor_id(self) -> int | None:
-        """Read-only alias for `parent_id`."""
         return self.parent_id
 
     def clean(self) -> None:

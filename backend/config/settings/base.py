@@ -4,25 +4,25 @@ from pathlib import Path
 
 from decouple import Csv, config
 
-# ---------------------------------------------------------------------------
-# libpq / psycopg2 encoding fix (must be set BEFORE any DB connection)
-#
-# On Windows with a Russian-locale PostgreSQL installation, libpq sends
-# authentication error messages in CP1251 (Cyrillic).  psycopg2 then tries
-# to decode them as UTF-8 and raises:
-#   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc2 ...
-#
-# Setting PGCLIENTENCODING here (before django.setup() ever touches the DB)
-# instructs libpq to request UTF-8 from the server for ALL text communication,
-# including error messages.
-# ---------------------------------------------------------------------------
+                                                                             
+                                                                      
+ 
+                                                                       
+                                                                          
+                                     
+                                                                
+ 
+                                                                           
+                                                                              
+                           
+                                                                             
 os.environ.setdefault("PGCLIENTENCODING", "UTF8")
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# ---------------------------------------------------------------------------
-# Core
-# ---------------------------------------------------------------------------
+                                                                             
+      
+                                                                             
 
 SECRET_KEY = config("DJANGO_SECRET_KEY")
 
@@ -37,9 +37,9 @@ LANGUAGE_CODE = "en-us"
 USE_I18N = True
 USE_TZ = True
 
-# ---------------------------------------------------------------------------
-# Applications
-# ---------------------------------------------------------------------------
+                                                                             
+              
+                                                                             
 
 DJANGO_APPS = [
     "django.contrib.admin",
@@ -51,7 +51,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    "mptt",                                         # C-1: was missing — required for User MPTT tree
+    "mptt",                                                                                         
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
@@ -75,13 +75,13 @@ LOCAL_APPS = [
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
-# ---------------------------------------------------------------------------
-# Middleware  (M-8: CorsMiddleware moved before SessionMiddleware)
-# ---------------------------------------------------------------------------
+                                                                             
+                                                                  
+                                                                             
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",            # M-8: must precede CommonMiddleware & SessionMiddleware
+    "corsheaders.middleware.CorsMiddleware",                                                                    
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -111,9 +111,9 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-# ---------------------------------------------------------------------------
-# Database (PostgreSQL)
-# ---------------------------------------------------------------------------
+                                                                             
+                       
+                                                                             
 
 DATABASES = {
     "default": {
@@ -126,19 +126,19 @@ DATABASES = {
         "CONN_MAX_AGE": config("DB_CONN_MAX_AGE", cast=int, default=60),
         "CONN_HEALTH_CHECKS": True,
         "OPTIONS": {
-            # S-4: "prefer" is acceptable for base/dev; prod.py overrides to "require".
+                                                                                       
             "sslmode": config("DB_SSLMODE", default="prefer"),
-            # Force UTF-8 client encoding regardless of PostgreSQL server locale.
-            # Prevents psycopg2 UnicodeDecodeError when server is configured
-            # with WIN1251, LATIN1, or any non-UTF-8 server_encoding.
+                                                                                 
+                                                                            
+                                                                     
             "client_encoding": "UTF8",
         },
     }
 }
 
-# ---------------------------------------------------------------------------
-# Password validation
-# ---------------------------------------------------------------------------
+                                                                             
+                     
+                                                                             
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -147,9 +147,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# ---------------------------------------------------------------------------
-# Static & media
-# ---------------------------------------------------------------------------
+                                                                             
+                
+                                                                             
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -164,9 +164,9 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# ---------------------------------------------------------------------------
-# REST Framework
-# ---------------------------------------------------------------------------
+                                                                             
+                
+                                                                             
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -193,10 +193,10 @@ REST_FRAMEWORK = {
     },
 }
 
-# ---------------------------------------------------------------------------
-# Simple JWT  (S-3: JWT_SIGNING_KEY has no default — must be set explicitly
-#              in the environment so it is independent from SECRET_KEY)
-# ---------------------------------------------------------------------------
+                                                                             
+                                                                           
+                                                                       
+                                                                             
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
@@ -208,14 +208,14 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": config("JWT_ROTATE_REFRESH_TOKENS", cast=bool, default=True),
     "BLACKLIST_AFTER_ROTATION": True,
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": config("JWT_SIGNING_KEY"),           # S-3: mandatory, no fallback to SECRET_KEY
+    "SIGNING_KEY": config("JWT_SIGNING_KEY"),                                                      
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
 }
 
-# ---------------------------------------------------------------------------
-# drf-spectacular
-# ---------------------------------------------------------------------------
+                                                                             
+                 
+                                                                             
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Grass MLM API",
@@ -233,9 +233,9 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-# ---------------------------------------------------------------------------
-# CORS
-# ---------------------------------------------------------------------------
+                                                                             
+      
+                                                                             
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
@@ -251,16 +251,16 @@ CORS_ALLOW_HEADERS = [
 ]
 CORS_EXPOSE_HEADERS = ["Content-Type", "Authorization"]
 
-# ---------------------------------------------------------------------------
-# CSRF
-# ---------------------------------------------------------------------------
+                                                                             
+      
+                                                                             
 
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_HTTPONLY = False
 
-# ---------------------------------------------------------------------------
-# Celery / Redis
-# ---------------------------------------------------------------------------
+                                                                             
+                
+                                                                             
 
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/0")
 CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://redis:6379/1")
@@ -270,24 +270,24 @@ CELERY_TASK_SOFT_TIME_LIMIT = config("CELERY_TASK_SOFT_TIME_LIMIT", cast=int, de
 CELERY_TASK_ALWAYS_EAGER = False
 CELERY_TASK_EAGER_PROPAGATES = False
 
-# ---------------------------------------------------------------------------
-# Redis cache
-# ---------------------------------------------------------------------------
+                                                                             
+             
+                                                                             
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": config("REDIS_CACHE_URL", default="redis://redis:6379/2"),
-        "TIMEOUT": config("REDIS_CACHE_TIMEOUT", cast=int, default=300),  # M-7: was hardcoded 5000 (83 min)
+        "TIMEOUT": config("REDIS_CACHE_TIMEOUT", cast=int, default=300),                                    
         "OPTIONS": {
             "client_class": "django_redis.client.DefaultClient",
         },
     }
 }
 
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
+                                                                             
+         
+                                                                             
 
 LOG_LEVEL = config("DJANGO_LOG_LEVEL", default="INFO")
 
@@ -339,42 +339,42 @@ LOGGING = {
     },
 }
 
-# ---------------------------------------------------------------------------
-# Reservation system
-# ---------------------------------------------------------------------------
+                                                                             
+                    
+                                                                             
 
-# Duration (minutes) for a soft stock reservation before auto-expiry.
-# Celery Beat task re-runs every 5 min to batch-expire stale reservations.
+                                                                     
+                                                                          
 RESERVATION_TIMEOUT_MINUTES: int = config(
     "RESERVATION_TIMEOUT_MINUTES",
     cast=int,
-    default=21600,  # 15 days (> 2 weeks)
+    default=21600,                       
 )
 
-# ---------------------------------------------------------------------------
-# Celery Beat periodic tasks
-# ---------------------------------------------------------------------------
-# Guarded import: celery may not be installed in all environments (e.g. CI).
-# Django settings must remain importable without Celery.
+                                                                             
+                            
+                                                                             
+                                                                            
+                                                        
 try:
-    from celery.schedules import crontab  # noqa: E402
+    from celery.schedules import crontab              
 
     CELERY_BEAT_SCHEDULE = {
         "expire-stale-reservations": {
             "task": "reservations.expire_stale",
             "schedule": crontab(minute="*/5"),
-            "options": {"expires": 240},  # drop task if not consumed within 4 min
+            "options": {"expires": 240},                                          
         },
         "distribute-confirm-bonuses": {
             "task": "bonuses.distribute_and_confirm",
-            # Bonus retries are handled by the task itself; this is a safety net
-            # to periodically re-try any PENDING bonuses in case the Celery task
-            # did not execute (broker outage, etc.).
-            # NOTE: only dispatched via Order.deliver endpoint in normal flow.
-            "schedule": crontab(hour="*/1"),  # every hour — safety net
-            "enabled": False,  # disabled by default; enable via env if needed
+                                                                                
+                                                                                
+                                                    
+                                                                              
+            "schedule": crontab(hour="*/1"),                           
+            "enabled": False,                                                 
         },
     }
 except ImportError:
-    # Celery not installed — CELERY_BEAT_SCHEDULE stays undefined (harmless).
+                                                                             
     pass

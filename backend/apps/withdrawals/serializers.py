@@ -6,7 +6,6 @@ from .models import Withdrawal, WithdrawalStatus
 
 
 class WithdrawalListSerializer(serializers.ModelSerializer):
-    """Compact representation for list views."""
 
     class Meta:
         model = Withdrawal
@@ -22,7 +21,6 @@ class WithdrawalListSerializer(serializers.ModelSerializer):
 
 
 class WithdrawalDetailSerializer(serializers.ModelSerializer):
-    """Full detail including processor info."""
 
     processed_by_phone = serializers.CharField(
         source="processed_by.phone",
@@ -48,7 +46,6 @@ class WithdrawalDetailSerializer(serializers.ModelSerializer):
 
 
 class WithdrawalCreateSerializer(serializers.Serializer):
-    """Input for a new withdrawal request."""
 
     amount = serializers.DecimalField(
         max_digits=14,
@@ -66,7 +63,6 @@ class WithdrawalCreateSerializer(serializers.Serializer):
 
 
 class WithdrawalRejectSerializer(serializers.Serializer):
-    """Input for rejecting a withdrawal (admin action)."""
 
     reason = serializers.CharField(
         max_length=1000,

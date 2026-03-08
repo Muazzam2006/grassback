@@ -1,20 +1,3 @@
-"""
-Withdrawal model — financial ledger entry.
-
-Financial consistency rules
-----------------------------
-1.  `bonus_balance` is DEBITED atomically inside `request_withdrawal()` the
-    moment the user submits the request, preventing double-spend on concurrent
-    requests.
-2.  If the withdrawal is REJECTED, `bonus_balance` is REFUNDED inside
-    `reject_withdrawal()` in a separate atomic transaction.
-3.  APPROVING a withdrawal does NOT modify `bonus_balance` (balance was already
-    debited at request time).
-4.  Both the debit and the Withdrawal row are written in the same
-    `transaction.atomic()` block so partial failures are impossible.
-5.  `select_for_update()` on the User row prevents concurrent withdrawals from
-    racing against each other.
-"""
 import secrets
 import string
 import uuid
@@ -35,22 +18,13 @@ class WithdrawalStatus(models.TextChoices):
 
 
 class Withdrawal(models.Model):
-    """
-    Immutable-on-create ledger record representing one payout request.
-
-    Balance lifecycle
-    -----------------
-    REQUEST  → user.bonus_balance  −= amount  (inside request_withdrawal)
-    APPROVE  → no balance change   (balance already debited)
-    REJECT   → user.bonus_balance  += amount  (inside reject_withdrawal, refund)
-    """
 
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
         editable=False,
     )
-    # Human-readable reference shown on receipts: WD-XXXXXXXX
+                                                             
     reference = models.CharField(
         max_length=20,
         unique=True,
@@ -60,7 +34,7 @@ class Withdrawal(models.Model):
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,          # Never silently delete financial records
+        on_delete=models.PROTECT,                                                   
         related_name="withdrawals",
         verbose_name=_("User"),
     )
@@ -120,13 +94,10 @@ class Withdrawal(models.Model):
                 condition=models.Q(amount__gt=0),
                 name="withdrawal_amount_gt_0",
             ),
-            # If status is APPROVED or REJECTED, processed_at and processed_by must be set.
-            # Enforced at service layer; adding DB check is complex with nullable FKs.
+                                                                                           
+                                                                                      
         ]
 
-    # ---------------------------------------------------------------------- #
-    #  Reference generation                                                   #
-    # ---------------------------------------------------------------------- #
 
     @staticmethod
     def _generate_reference() -> str:
@@ -137,10 +108,10 @@ class Withdrawal(models.Model):
     def __str__(self) -> str:
         return f"Withdrawal({self.reference}, {self.user_id}, {self.amount} {self.currency}, {self.status})"
 
-    # Withdrawals may not be modified once created — use service functions.
+                                                                           
     def save(self, *args, **kwargs):
         if self._state.adding and not self.reference:
-            # Generate reference on first save only
+                                                   
             for _ in range(10):
                 self.reference = self._generate_reference()
                 try:
@@ -148,8 +119,8 @@ class Withdrawal(models.Model):
                     with _t.atomic():
                         return super().save(*args, **kwargs)
                 except IntegrityError:
-                    # Retry only on duplicate reference (unique constraint);
-                    # all other errors are re-raised immediately.
+                                                                            
+                                                                 
                     continue
             raise RuntimeError("Failed to generate unique withdrawal reference.")
         return super().save(*args, **kwargs)

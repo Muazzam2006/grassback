@@ -88,7 +88,7 @@ class CustomUserAdmin(UserAdmin):
         "personal_turnover",
         "team_turnover",
         "bonus_balance",
-        # MPTT internal fields — never edit manually
+                                                    
         "lft",
         "rght",
         "tree_id",
@@ -181,7 +181,6 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(OTPToken)
 class OTPTokenAdmin(admin.ModelAdmin):
-    """Read-only admin: exposes OTP audit data without revealing raw codes."""
 
     list_display = ("id", "phone", "purpose", "is_used", "attempts", "expires_at", "created_at")
     list_filter = ("purpose", "is_used")
@@ -201,7 +200,6 @@ class OTPTokenAdmin(admin.ModelAdmin):
 
 @admin.register(UserStatusHistory)
 class UserStatusHistoryAdmin(admin.ModelAdmin):
-    """Read-only view of every MLM status change."""
 
     list_display = ("user", "old_status", "new_status", "changed_by", "changed_at")
     list_filter = ("old_status", "new_status")

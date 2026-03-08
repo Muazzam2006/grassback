@@ -67,8 +67,7 @@ class OrderAdmin(admin.ModelAdmin):
         if obj and obj.status in (OrderStatus.DELIVERED, OrderStatus.CANCELLED):
             return False
         return super().has_change_permission(request, obj)
-
-    # --- Admin lifecycle actions ---
+                                 
 
     @admin.action(description="✔ Confirm selected RESERVED orders")
     def action_confirm(self, request, queryset):

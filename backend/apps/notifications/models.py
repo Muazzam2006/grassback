@@ -1,15 +1,7 @@
-"""
-Notifications app models.
-
-This app manages notification delivery (push, SMS, in-app) to users.
-Domain statistics (e.g. NetworkStats) have been moved to apps.mlm where
-they belong architecturally (A-4).
-"""
 from django.db import models
 
 
 class Notification(models.Model):
-    """Placeholder model for future notification delivery records."""
 
     CHANNEL_PUSH = "push"
     CHANNEL_SMS = "sms"

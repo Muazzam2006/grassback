@@ -1,6 +1,3 @@
-"""
-Reservation serializers.
-"""
 from rest_framework import serializers
 
 from .models import Reservation, ReservationStatus
@@ -10,10 +7,6 @@ from .services import (
     ProductLimitExceededError,
 )
 
-
-# ---------------------------------------------------------------------------
-# Read serializers
-# ---------------------------------------------------------------------------
 
 class ReservationListSerializer(serializers.ModelSerializer):
     variant_sku = serializers.CharField(source="variant.sku", read_only=True)
@@ -62,12 +55,7 @@ class ReservationDetailSerializer(serializers.ModelSerializer):
         return obj.status == ReservationStatus.ACTIVE and obj.expires_at <= timezone.now()
 
 
-# ---------------------------------------------------------------------------
-# Write serializers
-# ---------------------------------------------------------------------------
-
 class ReservationCreateSerializer(serializers.Serializer):
-    """Input: which variant + how many units to reserve."""
     variant_id = serializers.UUIDField()
     quantity = serializers.IntegerField(min_value=1)
 
@@ -84,7 +72,7 @@ class ReservationCreateSerializer(serializers.Serializer):
     def create_reservation(self, user):
         from .services import reserve_variant
 
-        variant = self.validated_data["variant_id"]  # already resolved to instance
+        variant = self.validated_data["variant_id"]                                
         quantity = self.validated_data["quantity"]
 
         try:
@@ -98,7 +86,6 @@ class ReservationCreateSerializer(serializers.Serializer):
 
 
 class CheckoutSerializer(serializers.Serializer):
-    """Input for checkout: reservation IDs + delivery address + fee."""
     reservation_ids = serializers.ListField(
         child=serializers.UUIDField(),
         min_length=1,

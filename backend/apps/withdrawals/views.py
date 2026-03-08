@@ -26,17 +26,7 @@ class WithdrawalViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    """
-    Withdrawal resource.
-
-    Endpoints
-    ---------
-    POST   /withdrawals/           → request a withdrawal (authenticated user)
-    GET    /withdrawals/           → list own withdrawals (admin = all)
-    GET    /withdrawals/{id}/      → detail view
-    POST   /withdrawals/{id}/approve/ → approve (admin only)
-    POST   /withdrawals/{id}/reject/  → reject  (admin only)
-    """
+    
 
     lookup_field = "id"
     http_method_names = ["get", "post", "head", "options"]

@@ -4,10 +4,6 @@ from .models import StatusThreshold
 
 
 class StatusThresholdSerializer(serializers.ModelSerializer):
-    """
-    Read-only serializer for status promotion thresholds.
-    Agents can view thresholds to understand what's required for promotion.
-    """
 
     class Meta:
         model = StatusThreshold

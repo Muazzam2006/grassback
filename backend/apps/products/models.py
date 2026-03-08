@@ -1,4 +1,3 @@
-
 import hashlib
 import uuid
 from decimal import Decimal
@@ -193,7 +192,7 @@ class ProductImage(models.Model):
         verbose_name_plural = _("Product Images")
         ordering = ["ordering"]
         constraints = [
-            # Only one primary image per product
+                                                
             models.UniqueConstraint(
                 fields=["product"],
                 condition=models.Q(is_primary=True),
@@ -206,7 +205,6 @@ class ProductImage(models.Model):
 
 
 class ProductAttribute(models.Model):
-    """Attribute dimension: Color, Size, Material, etc."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True, verbose_name=_("Name"))
 
@@ -220,7 +218,6 @@ class ProductAttribute(models.Model):
 
 
 class ProductAttributeValue(models.Model):
-    """Concrete attribute value: Red, XL, Cotton, etc."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     attribute = models.ForeignKey(
         ProductAttribute, on_delete=models.CASCADE, related_name="values",
@@ -246,7 +243,6 @@ class ProductAttributeValue(models.Model):
 
 
 class ProductVariant(models.Model):
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="variants",
@@ -309,9 +305,6 @@ class ProductVariant(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.attributes_hash:
-            # If creating via standard forms/admin, attribute links are added AFTER
-            # the variant is created. We initialize with an empty hash, and update
-            # it later if attributes are attached.
             self.attributes_hash = _compute_attribute_hash([])
         super().save(*args, **kwargs)
 

@@ -10,16 +10,6 @@ User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    User resource endpoint.
-
-    create          → AllowAny  (public registration)
-    list            → IsAdminOnly
-    retrieve        → IsSelfOrAdmin
-    update /
-    partial_update  → IsSelfOrAdmin
-    destroy         → disabled (405)
-    """
 
     lookup_field = "pk"
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]

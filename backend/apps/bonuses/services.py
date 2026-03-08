@@ -52,12 +52,12 @@ def distribute_order_bonuses(order: Order) -> list[Bonus]:
             if rule is None:
                 continue
 
-            # Calculate bonus amount based on rule type
+                                                       
             if rule.calculation_type == CalculationType.PERCENT:
                 amount = (
                     order.total_amount * rule.value / Decimal("100")
                 ).quantize(_QUANTIZE_STEP, rounding=ROUND_HALF_UP)
-            else:  # FIXED
+            else:         
                 amount = rule.value.quantize(_QUANTIZE_STEP, rounding=ROUND_HALF_UP)
 
             if amount <= Decimal("0.00"):
@@ -72,10 +72,10 @@ def distribute_order_bonuses(order: Order) -> list[Bonus]:
                 bonus_type=bonus_type,
                 defaults={
                     "source_user": buyer,
-                    # v2 snapshots
+                                  
                     "calculation_type_snapshot": rule.calculation_type,
                     "applied_value_snapshot": rule.value,
-                    # v1 compat: null for FIXED bonuses
+                                                       
                     "percent_snapshot": (
                         rule.value if rule.calculation_type == CalculationType.PERCENT else None
                     ),
@@ -92,14 +92,6 @@ def distribute_order_bonuses(order: Order) -> list[Bonus]:
 
 @transaction.atomic
 def confirm_order_bonuses(order: Order) -> int:
-    """
-    Promote all PENDING bonuses for *order* to CONFIRMED and credit user balances.
-
-    Raises:
-        ValueError: if *order* is not in DELIVERED status (guard against misuse).
-    """
-    # Re-read status from DB to avoid acting on a stale in-memory object.
-    # OrderStatus is imported at the top of this module.
     fresh_status = Order.objects.filter(pk=order.pk).values_list("status", flat=True).first()
     if fresh_status != OrderStatus.DELIVERED:
         raise ValueError(
@@ -145,7 +137,6 @@ def confirm_order_bonuses(order: Order) -> int:
         pk__in=[b.pk for b in pending_bonuses]
     ).update(status=BonusStatus.CONFIRMED)
 
-    # Re-evaluate MLM status for all users whose turnover counters changed.
     from apps.mlm.services import promote_user_status
 
     for uid in user_deltas:

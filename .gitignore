@@ -33,3 +33,7 @@ Thumbs.db
 .mypy_cache/
 .ruff_cache/
 *.log
+
+# Local diagnostic scratch files
+backend/check_*.txt
+backend/import_test.txt

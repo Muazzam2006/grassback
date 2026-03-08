@@ -1,9 +1,3 @@
-"""
-Celery tasks for the bonuses app.
-
-Bonus distribution is dispatched asynchronously from the order-deliver endpoint
-to avoid blocking the HTTP worker while traversing a potentially deep MLM tree.
-"""
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
@@ -17,18 +11,6 @@ logger = get_task_logger(__name__)
     acks_late=True,
 )
 def distribute_and_confirm_bonuses_task(order_id: str) -> dict:
-    """
-    Distribute and confirm bonuses for a delivered order.
-
-    Args:
-        order_id:  str representation of the Order UUID primary key.
-
-    Returns:
-        A dict with keys ``distributed`` (int) and ``confirmed`` (int).
-
-    Retries automatically on transient DB errors (max 5 times).
-    Idempotent: `distribute_order_bonuses` uses get_or_create so re-running is safe.
-    """
     from apps.orders.models import Order
     from .services import distribute_order_bonuses, confirm_order_bonuses
 

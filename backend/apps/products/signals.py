@@ -6,13 +6,7 @@ from .models import ProductVariantAttributeValue, _compute_attribute_hash
 @receiver(post_save, sender=ProductVariantAttributeValue)
 @receiver(post_delete, sender=ProductVariantAttributeValue)
 def update_variant_attributes_hash(sender, instance, **kwargs):
-    """
-    Whenever an attribute value is attached or detached from a variant,
-    recompute the variant's attributes_hash so that the unique constraint
-    (product_id + attributes_hash) is maintained.
-    """
     variant = instance.variant
-    # Get all current attribute value IDs attached to this variant
     attr_ids = list(
         variant.attribute_values.values_list("attribute_value_id", flat=True)
     )

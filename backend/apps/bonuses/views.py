@@ -11,13 +11,6 @@ from .serializers import BonusDetailSerializer, BonusListSerializer
 
 
 class BonusViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
-    """
-    Read-only viewset for Bonus records.
-
-    - Authenticated users see only their own bonuses.
-    - Staff see all bonuses.
-    - No create / update / delete endpoints.
-    """
 
     lookup_field = "id"
     permission_classes = [IsAuthenticated, IsBonusOwnerOrAdmin]

@@ -1,16 +1,3 @@
-"""
-Delivery views.
-
-Fixes applied
--------------
-C-3: Replaced bare `except Exception` with specific `DoesNotExist` exceptions.
-     Previously, programming errors (AttributeError, etc.) returned HTTP 400
-     instead of propagating as 500, hiding real bugs.
-
-C-4: Added `IsOwnerOrAdmin` object-level permission to `DeliveryAddressViewSet`.
-     Previously a non-staff user could read/update/delete any other user's
-     delivery address by guessing its UUID (horizontal privilege escalation).
-"""
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import BasePermission, IsAuthenticated
@@ -35,28 +22,12 @@ from .services import (
 )
 
 
-# ---------------------------------------------------------------------------
-# Object-level permission: owner or admin (C-4)
-# ---------------------------------------------------------------------------
-
 class IsAddressOwnerOrAdmin(BasePermission):
-    """Allow access only to the address owner or a staff user."""
-
     def has_object_permission(self, request, view, obj):
         return request.user.is_staff or obj.user_id == request.user.pk
-
-
-# ---------------------------------------------------------------------------
-# Views
-# ---------------------------------------------------------------------------
+                                                                          
 
 class DeliveryAddressViewSet(viewsets.ModelViewSet):
-    """CRUD for the authenticated user's own delivery addresses.
-
-    C-4: Object-level permission enforced via IsAddressOwnerOrAdmin so that
-    a non-staff user cannot access another user's address by UUID.
-    """
-
     serializer_class = DeliveryAddressSerializer
     permission_classes = [IsAuthenticated, IsAddressOwnerOrAdmin]
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
@@ -70,7 +41,7 @@ class DeliveryAddressViewSet(viewsets.ModelViewSet):
 
         if self.request.user.is_staff:
             return DeliveryAddress.objects.select_related("user").all()
-        # Non-staff: always scope to own addresses — defence-in-depth
+                                                                     
         return DeliveryAddress.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
@@ -78,7 +49,6 @@ class DeliveryAddressViewSet(viewsets.ModelViewSet):
 
 
 class CourierViewSet(viewsets.ModelViewSet):
-    """Admin-only: CRUD for couriers."""
     queryset = Courier.objects.all()
     serializer_class = CourierSerializer
     permission_classes = [IsAuthenticated, IsAdminOnly]
@@ -91,14 +61,6 @@ class OrderDeliveryViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    """
-    Endpoints:
-        POST    /deliveries/                     → create delivery (admin)
-        GET     /deliveries/                     → list (admin=all, user=own)
-        GET     /deliveries/{id}/               → detail
-        POST    /deliveries/{id}/update_status/ → transition status (admin)
-        POST    /deliveries/{id}/assign_courier/ → assign courier (admin)
-    """
 
     lookup_field = "id"
 
@@ -156,8 +118,7 @@ class OrderDeliveryViewSet(
 
         try:
             delivery = create_order_delivery(
-                order=order,
-                # delivery_address is taken from order.delivery_address inside the service
+                order=order,                                                                                          
                 delivery_fee=d.get("delivery_fee"),
                 courier=courier,
                 notes=d.get("notes", ""),

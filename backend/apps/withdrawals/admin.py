@@ -39,10 +39,10 @@ class WithdrawalAdmin(admin.ModelAdmin):
     actions = ["action_approve", "action_reject"]
 
     def has_add_permission(self, request) -> bool:
-        return False  # Withdrawals are created through the API only
+        return False                                                
 
     def has_delete_permission(self, request, obj=None) -> bool:
-        return False  # Financial records are permanent
+        return False                                   
 
     def has_change_permission(self, request, obj=None) -> bool:
         if obj and obj.status != WithdrawalStatus.PENDING:

@@ -1,20 +1,8 @@
-"""
-Orders serializers — COD lifecycle (v3).
-
-Read serializers expose the full lifecycle.
-OrderCreateSerializer is removed — orders are now created via
-POST /api/v1/reservations/checkout/ using CheckoutSerializer.
-"""
 from decimal import Decimal
 
 from rest_framework import serializers
 
 from .models import Order, OrderItem, OrderLifecycleLog, OrderStatus
-
-
-# ---------------------------------------------------------------------------
-# Sub-serializers
-# ---------------------------------------------------------------------------
 
 class OrderItemSerializer(serializers.ModelSerializer):
     variant_sku = serializers.CharField(source="variant.sku", read_only=True, default=None)
@@ -43,10 +31,6 @@ class OrderLifecycleLogSerializer(serializers.ModelSerializer):
         fields = ["from_status", "to_status", "changed_by", "note", "created_at"]
         read_only_fields = fields
 
-
-# ---------------------------------------------------------------------------
-# Order read serializers
-# ---------------------------------------------------------------------------
 
 class OrderListSerializer(serializers.ModelSerializer):
     grand_total = serializers.DecimalField(
@@ -86,12 +70,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-# ---------------------------------------------------------------------------
-# Admin-facing status transition serializer
-# ---------------------------------------------------------------------------
-
 class OrderStatusTransitionSerializer(serializers.Serializer):
-    """Used by admin actions (ship, confirm, deliver, cancel)."""
     note = serializers.CharField(
         max_length=500, required=False, default="", allow_blank=True
     )

@@ -10,13 +10,6 @@ _SLUG_MAX_RETRIES = 20
 
 
 class FlexiblePkOrSlugRelatedField(serializers.PrimaryKeyRelatedField):
-    """
-    Accept either PK (UUID) or slug for related objects.
-
-    This preserves existing PK-based clients while allowing friendlier slug-based
-    payloads in write endpoints.
-    """
-
     def __init__(self, *args, slug_field: str = "slug", **kwargs):
         self.slug_field = slug_field
         super().__init__(*args, **kwargs)
@@ -39,10 +32,6 @@ class FlexiblePkOrSlugRelatedField(serializers.PrimaryKeyRelatedField):
                         raise pk_error
             raise pk_error
 
-
-# --------------------------------------------------------------------------- #
-#  Category serializers                                                        #
-# --------------------------------------------------------------------------- #
 
 class ProductCategoryListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -77,13 +66,7 @@ class ProductCategoryWriteSerializer(serializers.ModelSerializer):
         return value
 
 
-# --------------------------------------------------------------------------- #
-#  Product serializers                                                         #
-# --------------------------------------------------------------------------- #
-
 class ProductCategoryInlineSerializer(serializers.ModelSerializer):
-    """Compact FK representation embedded inside product responses."""
-
     class Meta:
         model = ProductCategory
         fields = ["id", "name", "slug"]
@@ -91,15 +74,12 @@ class ProductCategoryInlineSerializer(serializers.ModelSerializer):
 
 
 class BrandInlineSerializer(serializers.Serializer):
-    """Minimal brand representation (avoids circular imports — Brand is in same module)."""
     id = serializers.UUIDField(read_only=True)
     name = serializers.CharField(read_only=True)
     slug = serializers.SlugField(read_only=True)
 
 
 class ProductVariantInlineSerializer(serializers.ModelSerializer):
-    """Minimal variant payload for selecting a reservable variant UUID."""
-
     effective_price = serializers.DecimalField(
         max_digits=14, decimal_places=2, read_only=True
     )
@@ -111,9 +91,6 @@ class ProductVariantInlineSerializer(serializers.ModelSerializer):
 
 
 class ProductListSerializer(serializers.ModelSerializer):
-    """
-    M-2: Added brand, promo_price, has_variants, effective_price to list view.
-    """
     category = ProductCategoryInlineSerializer(read_only=True)
     brand = BrandInlineSerializer(read_only=True)
     variants = ProductVariantInlineSerializer(many=True, read_only=True)
@@ -131,9 +108,6 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
-    """
-    M-2: Added brand, promo_price, has_variants, effective_price to detail view.
-    """
     category = ProductCategoryInlineSerializer(read_only=True)
     brand = BrandInlineSerializer(read_only=True)
     variants = ProductVariantInlineSerializer(many=True, read_only=True)
@@ -154,11 +128,6 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
 
 class ProductCreateUpdateSerializer(serializers.ModelSerializer):
-    """
-    M-2: Accepts brand and promo_price on write (previously omitted).
-    N-1: Uses proper top-level slugify import instead of __import__ anti-pattern.
-    """
-
     category = FlexiblePkOrSlugRelatedField(
         queryset=ProductCategory._default_manager.all(),
         required=False,

@@ -1,21 +1,3 @@
-"""
-Order lifecycle services (COD, v3).
-
-The primary checkout path is `checkout_from_reservations` in
-apps.reservations.services — this file now contains lifecycle transition
-services that advance an Order through the COD pipeline.
-
-Services defined here
----------------------
-transition_order_status()   — generic guarded status transition + audit log
-confirm_order()             — RESERVED → CONFIRMED  (admin)
-ship_order()                — CONFIRMED → SHIPPED    (admin / delivery system)
-deliver_order()             — SHIPPED → DELIVERED    (triggers bonuses)
-cancel_order()              — any pre-DELIVERED → CANCELLED (releases stock)
-
-All transitions are atomic.  select_for_update() on the Order row prevents
-concurrent state changes.
-"""
 from django.db import transaction
 from django.db.models import F
 from django.contrib.auth import get_user_model
@@ -30,15 +12,14 @@ User = get_user_model()
 class OrderTransitionError(Exception):
     """Raised when an order cannot be transitioned to the requested status."""
 
-
-# Allowed status transitions (from → {allowed targets})
+                                                   
 _ALLOWED_TRANSITIONS: dict[str, set[str]] = {
     OrderStatus.CREATED:   {OrderStatus.RESERVED, OrderStatus.CANCELLED},
     OrderStatus.RESERVED:  {OrderStatus.CONFIRMED, OrderStatus.CANCELLED},
     OrderStatus.CONFIRMED: {OrderStatus.SHIPPED, OrderStatus.CANCELLED},
     OrderStatus.SHIPPED:   {OrderStatus.DELIVERED, OrderStatus.CANCELLED},
-    OrderStatus.DELIVERED: set(),   # terminal — immutable
-    OrderStatus.CANCELLED: set(),   # terminal — immutable
+    OrderStatus.DELIVERED: set(),                         
+    OrderStatus.CANCELLED: set(),                         
 }
 
 
@@ -49,13 +30,6 @@ def transition_order_status(
     changed_by: User | None = None,
     note: str = "",
 ) -> Order:
-    """
-    Guarded status transition.  Locks the Order row, validates the transition,
-    writes an audit log entry, and saves.
-
-    Raises:
-        OrderTransitionError: if the transition is not allowed.
-    """
     order = Order.objects.select_for_update().get(pk=order.pk)
 
     allowed = _ALLOWED_TRANSITIONS.get(order.status, set())
@@ -85,7 +59,6 @@ def confirm_order(
     admin_user: User | None = None,
     note: str = "",
 ) -> Order:
-    """Advance RESERVED → CONFIRMED."""
     log_note = note or "Order confirmed by admin."
     return transition_order_status(
         order, OrderStatus.CONFIRMED, changed_by=admin_user,
@@ -100,7 +73,6 @@ def ship_order(
     tracking_number: str = "",
     note: str = "",
 ) -> Order:
-    """Advance CONFIRMED → SHIPPED."""
     base_note = f"Shipped. Tracking: {tracking_number or '—'}"
     log_note = f"{base_note}. {note}" if note else base_note
     order = transition_order_status(
@@ -116,17 +88,6 @@ def deliver_order(
     admin_user: User | None = None,
     note: str = "",
 ) -> Order:
-    """
-    Advance SHIPPED → DELIVERED.
-
-    This is the COD financial confirmation.  After commit, the Celery task
-    (or synchronous call) distributes and confirms bonuses.
-
-    The bonus distribution is NOT called inside this function to avoid
-    coupling order state to bonus logic and to allow retries.
-    Caller should invoke bonuses.services.distribute_order_bonuses(order)
-    and bonuses.services.confirm_order_bonuses(order) after this returns.
-    """
     log_note = note or "Delivered to customer (COD)."
     return transition_order_status(
         order, OrderStatus.DELIVERED, changed_by=admin_user,
@@ -140,11 +101,6 @@ def cancel_order(
     changed_by: User | None = None,
     note: str = "Cancelled.",
 ) -> Order:
-    """
-    Cancel an order that is not yet DELIVERED.
-
-    Restores physical stock for all variants in the order via F() expressions.
-    """
     order = Order.objects.select_for_update().get(pk=order.pk)
 
     if order.status in (OrderStatus.DELIVERED, OrderStatus.CANCELLED):
@@ -152,7 +108,7 @@ def cancel_order(
             f"Order with status {order.status!r} cannot be cancelled."
         )
 
-    # Restore physical stock atomically for every variant-bearing item
+                                                                      
     items_with_variant = OrderItem.objects.filter(
         order=order,
         variant__isnull=False,

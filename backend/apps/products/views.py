@@ -16,13 +16,6 @@ from .serializers import (
 
 
 class ProductCategoryViewSet(viewsets.ModelViewSet):
-    """
-    Product category resource.
-
-    Read endpoints are public (no auth required).
-    Write endpoints (create/update/delete) require admin.
-    """
-
     lookup_field = "slug"
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -49,12 +42,6 @@ class ProductCategoryViewSet(viewsets.ModelViewSet):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    """
-    Product resource.
-
-    M-2: Removed class-level `queryset` — basename is explicit on the router.
-    """
-
     lookup_field = "slug"
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
 
@@ -75,8 +62,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             return qs
 
         qs = qs.filter(is_active=True, is_visible=True)
-
-        # Category filter: ?category=<slug>
+             
         category_slug = self.request.query_params.get("category")
         if category_slug:
             qs = qs.filter(category__slug=category_slug)
