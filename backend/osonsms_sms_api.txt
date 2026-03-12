@@ -1,0 +1,222 @@
+                                                                                                              2025
+
+  OsonSMS
+
+  2.0.2 (08.02.2026)
+
+ "  "
+ "  "                                           www.osonsms.com
+
+
+
+  API- ............................................................................................................................. 1
+    :....................................................................................................................................................... 1
+    ,  : .............................................................................................................. 4
+    :............................................................................................................................................... 4
+     : .................................................................................................................................... 5
+
+                             API-
+
+API-     HTTPS.     JSON. 
+     UTF-8.        20 . 
+       .      txn_id  
+   2 .     API-.    
+   .
+
+ :
+
+HTTPS-: HTTPS://api.osonsms.com/sendsms_v1.php
+HTTP-: GET
+HTTP-: Authorization: Bearer YOUR_TOKEN
+
+:
+
+from             
+phone_number         992
+msg               -
+login             (    )
+txn_id                
+channel           .   ,    
+                   .   : telegram
+is_confidential     true,   -     
+                         .   
+                 false.
+ "  "            www.osonsms.com
+
+ :
+
+  HTTP-             
+
+201 ­            status=ok;
+   -             txn_id ­      ;
+                 msg_id ­      osonsms;
+                 smsc_msg_parts ­ -     ;
+                 timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+
+409 ­    txn_id   error c :
+                 code=108;
+                 msg="Duplicate txn_id. It should be unique.";
+422 ­            timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+                  error c :
+                 code=100;
+401 ­            msg="One of the mandatory variables (from,phone_number,msg,login,txn_id)
+                 not set.";
+422 ­            timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+                  error c :
+                 code=105;
+402 ­            msg="Inactive or non-existent account";
+                 timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+                  error c :
+422 ­            code=107;
+                 msg="Incorrect sender";
+500 ­            timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+                  error c :
+                 code=119;
+501 ­            msg="Balance overdraft limit has reached. Please top up your balance.";
+                 timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+                  error c :
+599 ­            code=106;
+  -              msg="Incorrect Authorization";
+                 timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+                  error c :
+                 code=109;
+                 msg="Unable to store message.";
+                 timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+                  error c :
+                 code=112;
+                 msg="Error while sending sms.";
+                 timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+                  error c :
+                 code=113;
+                 msg="Unable to connect to smsc host.";
+                 timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+ "  "        www.osonsms.com
+
+401 ­ ip-     error c :
+             code=114;
+             msg="Host is not in whitelist";
+             timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+ "  "                                              www.osonsms.com
+
+ ,  :
+
+ HTTPS-: HTTPS://api.osonsms.com/query_sms.php
+ HTTP-: GET
+ HTTP-: Authorization: Bearer YOUR_TOKEN
+
+ :
+
+login           (    )
+txn_id              
+msg_id         ID    
+
+ :
+
+  HTTP-           
+200 ­          status ­  ;
+               timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+422 ­           error c :
+               code=100;
+               msg="One of the mandatory variables (login, msg_id) not set.";
+401 ­          timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+                error c :
+422 ­          code=105;
+               msg="Inactive or non-existent account";
+               timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+                error c :
+               code=106;
+               msg="Incorrect Authorization";
+               timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+
+  :
+
+               
+ENROUTE            
+DELIVERED       ,     
+EXPIRED           
+
+DELETED          
+
+UNDELIVERABLE      :   ,   
+ACCEPTED          
+                ,       
+
+UNKNOWN          
+
+REJECTED          .   -  
+                .
+
+ :
+
+HTTPS-: HTTPS://api.osonsms.com/check_balance.php
+HTTP-: GET
+HTTP-: Authorization: Bearer YOUR_TOKEN
+ "  "                                                       www.osonsms.com
+
+:
+
+login          (    )
+
+ :
+
+  HTTP-          
+200 ­         balance ­  ;
+              timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+422 ­          error c :
+              code=100;
+              msg="One of the mandatory variables (login,txn_id) not set.";
+401 ­         timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+               error c :
+422 ­         code=105;
+              msg="Inactive or non-existent account";
+              timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+               error c :
+              code=106;
+              msg="Incorrect Authorization";
+              timestamp ­     «YYYY-MM-DD HH24:MI:SS»;
+
+  :
+
+   HTTPS- : HTTPS://cab.osonsms.com/api/v1/bulk-sms/create
+   HTTP-: POST
+   HTTP-: Authorization: Bearer YOUR_TOKEN
+
+:
+
+ from         
+ msg           -.    with_params=1,  
+                  ,   
+ login          ,   csv .
+ txn_id        (    )
+ send_at           
+ file               yyyy-mm-dd hh:mm:ss
+ with_params  CSV     ,    5
+               ,     1,  
+ :               CSV ,    , 
+              , param1,  ..    
+              https://cab.osonsms.com/import-template.csv
+
+  HTTP-    
+
+200 ­         {
+ "  "    www.osonsms.com
+
+422 ­      "status" => "success",
+           "message" => "Bulk SMS created successfully",
+           "sms_bulk_name" => "  ",
+404 ­    }
+400 ­    {
+           "success": false,
+           "message": "Validation errors",
+           "data": {
+
+              "from": ["The from field is required."]
+           }
+         }
+         {
+           "error" => "User not found"
+         }
+         {
+           "error" => "No phone numbers found in the file"
+         }
+

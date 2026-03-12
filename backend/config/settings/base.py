@@ -33,7 +33,7 @@ ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", cast=Csv())
 AUTH_USER_MODEL = "users.User"
 
 TIME_ZONE = "Asia/Dushanbe"
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ru"
 USE_I18N = True
 USE_TZ = True
 
@@ -77,11 +77,14 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 UNFOLD = {
-    "SITE_TITLE": "Grass MLM Admin",
-    "SITE_HEADER": "Grass MLM",
+    "SITE_TITLE": "Панель управления Grass MLM",
+    "SITE_HEADER": "Админ-панель Grass MLM",
     "SITE_SYMBOL": "inventory_2",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": False,
+    "STYLES": [
+        "admin_theme/css/unfold-sidebar-hierarchy.css",
+    ],
     "COLORS": {
         "primary": {
             "50": "oklch(98.2% 0.018 155)",
@@ -274,6 +277,16 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 CORS_EXPOSE_HEADERS = ["Content-Type", "Authorization"]
+
+SMS_LOGIN = config("SMS_LOGIN", default="")
+SMS_HASH = config("SMS_HASH", default="")
+SMS_SENDER = config("SMS_SENDER", default="")
+SMS_SERVER = config("SMS_SERVER", default="https://api.osonsms.com/sendsms_v1.php")
+SMS_TIMEOUT_SEC = config("SMS_TIMEOUT_SEC", cast=float, default=10.0)
+
+OTP_CODE_TTL_MINUTES = config("OTP_CODE_TTL_MINUTES", cast=int, default=5)
+OTP_MAX_ATTEMPTS = config("OTP_MAX_ATTEMPTS", cast=int, default=5)
+OTP_VERIFIED_TTL_MINUTES = config("OTP_VERIFIED_TTL_MINUTES", cast=int, default=30)
 
                                                                              
       

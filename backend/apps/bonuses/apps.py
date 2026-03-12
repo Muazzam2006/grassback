@@ -3,7 +3,7 @@ from django.apps import AppConfig
 
 class BonusesConfig(AppConfig):
     name = "apps.bonuses"
-    verbose_name = "Bonuses"
+    verbose_name = "Бонусная программа"
     default_auto_field = "django.db.models.BigAutoField"
 
     def ready(self) -> None:

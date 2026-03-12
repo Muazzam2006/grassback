@@ -75,7 +75,17 @@ class Order(models.Model):
         return self.total_amount + self.delivery_fee
 
     def __str__(self):
-        return f"Order({self.id}, user={self.user_id}, {self.status})"
+        status_map = {
+            OrderStatus.CREATED: "Создан",
+            OrderStatus.RESERVED: "Забронирован",
+            OrderStatus.CONFIRMED: "Подтвержден",
+            OrderStatus.SHIPPED: "Отправлен",
+            OrderStatus.DELIVERED: "Доставлен",
+            OrderStatus.CANCELLED: "Отменен",
+        }
+        phone = getattr(self.user, "phone", "—")
+        status_label = status_map.get(self.status, self.status)
+        return f"Заказ {self.created_at:%d.%m.%Y %H:%M} ({phone}, {status_label})"
 
 
 class OrderItem(models.Model):

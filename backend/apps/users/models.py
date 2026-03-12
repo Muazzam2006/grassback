@@ -32,6 +32,7 @@ class User(MPTTModel, AbstractBaseUser, PermissionsMixin):
     )
     first_name = models.CharField(max_length=150, verbose_name="First Name")
     last_name = models.CharField(max_length=150, verbose_name="Last Name")
+    address = models.CharField(max_length=255, blank=True, default="", verbose_name="Address")
     is_active = models.BooleanField(
         default=True,
         verbose_name="Active",

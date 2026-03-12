@@ -80,7 +80,7 @@ LOGGING["loggers"]["django.db.backends"]["level"] = config("DJANGO_DB_LOG_LEVEL"
                              
                                                                              
 
-CELERY_TIMEZONE = TIME_ZONE                                            
+CELERY_TIMEZONE = "Asia/Dushanbe"
 CELERY_ENABLE_UTC = True
 CELERY_TASK_ALWAYS_EAGER = False
 CELERY_TASK_EAGER_PROPAGATES = False

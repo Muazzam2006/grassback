@@ -16,6 +16,9 @@ def _compute_attribute_hash(attribute_value_ids: list) -> str:
     return hashlib.sha256(canonical.encode()).hexdigest()
 
 
+_EMPTY_ATTRIBUTES_HASH = _compute_attribute_hash([])
+
+
 
 class Brand(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -247,7 +250,7 @@ class ProductVariant(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="variants",
     )
-    sku = models.CharField(max_length=100, unique=True, db_index=True, verbose_name=_("SKU"))
+    sku = models.CharField(max_length=100, db_index=True, verbose_name=_("SKU"))
     stock = models.PositiveIntegerField(
         default=0,
         verbose_name=_("Stock"),
@@ -284,7 +287,12 @@ class ProductVariant(models.Model):
         verbose_name_plural = _("Product Variants")
         constraints = [
             models.UniqueConstraint(
+                fields=["product", "sku"],
+                name="unique_variant_sku_per_product",
+            ),
+            models.UniqueConstraint(
                 fields=["product", "attributes_hash"],
+                condition=~models.Q(attributes_hash=_EMPTY_ATTRIBUTES_HASH),
                 name="unique_variant_per_product_attributes",
             ),
             models.CheckConstraint(
@@ -305,7 +313,7 @@ class ProductVariant(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.attributes_hash:
-            self.attributes_hash = _compute_attribute_hash([])
+            self.attributes_hash = _EMPTY_ATTRIBUTES_HASH
         super().save(*args, **kwargs)
 
     @property

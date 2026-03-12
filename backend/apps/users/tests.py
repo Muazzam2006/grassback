@@ -1,15 +1,20 @@
+from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase, TransactionTestCase
+from django.urls import reverse
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.test import APITestCase
 
 from apps.bonuses.models import Bonus, BonusStatus, BonusType, MLMRule
 from apps.bonuses.services import distribute_order_bonuses
 from apps.orders.models import Order, OrderStatus
 from apps.products.models import Product
 
-from .models import User, UserStatus
+from .models import OTPPurpose, OTPToken, User, UserStatus
 
 
 
@@ -243,3 +248,106 @@ class TreeRebuildTest(TransactionTestCase):
         self.assertEqual(grandchild.level, 2)
         self.assertLess(root.lft, child.lft)
         self.assertGreater(root.rght, child.rght)
+
+
+class UserRegistrationOTPApiTests(APITestCase):
+    def test_request_registration_otp_creates_token(self):
+        with patch("apps.users.services.send_oson_sms") as mocked_send_sms:
+            response = self.client.post(
+                reverse("users-request-registration-otp"),
+                {"phone": "+992900010001"},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["detail"], "OTP code sent successfully.")
+        self.assertTrue(
+            OTPToken.objects.filter(phone="+992900010001", purpose=OTPPurpose.REGISTER, is_used=False).exists()
+        )
+        mocked_send_sms.assert_called_once()
+
+    def test_verify_otp_then_create_user_without_password(self):
+        raw_code = "123456"
+        OTPToken.objects.create(
+            phone="+992900010002",
+            code_hash=OTPToken.hash_code(raw_code),
+            purpose=OTPPurpose.REGISTER,
+            is_used=False,
+            attempts=0,
+            expires_at=timezone.now() + timedelta(minutes=5),
+        )
+
+        verify_response = self.client.post(
+            reverse("users-verify-registration-otp"),
+            {
+                "phone": "+992900010002",
+                "otp_code": raw_code,
+            },
+            format="json",
+        )
+        self.assertEqual(verify_response.status_code, status.HTTP_200_OK)
+
+        response = self.client.post(
+            reverse("users-list"),
+            {
+                "phone": "+992900010002",
+                "first_name": "Otp",
+                "last_name": "User",
+                "address": "Dushanbe, Rudaki 1",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        user = User.objects.get(phone="+992900010002")
+        self.assertEqual(user.address, "Dushanbe, Rudaki 1")
+        self.assertFalse(user.has_usable_password())
+        self.assertFalse(OTPToken.objects.filter(phone="+992900010002", purpose=OTPPurpose.REGISTER, is_used=False).exists())
+
+    def test_create_user_without_verified_phone_rejected(self):
+        response = self.client.post(
+            reverse("users-list"),
+            {
+                "phone": "+992900010003",
+                "first_name": "No",
+                "last_name": "Otp",
+                "address": "Dushanbe",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Phone number is not verified. Verify OTP code first.", response.data["phone"])
+
+    def test_create_user_without_address_rejected(self):
+        raw_code = "123456"
+        OTPToken.objects.create(
+            phone="+992900010004",
+            code_hash=OTPToken.hash_code(raw_code),
+            purpose=OTPPurpose.REGISTER,
+            is_used=False,
+            attempts=0,
+            expires_at=timezone.now() + timedelta(minutes=5),
+        )
+
+        self.client.post(
+            reverse("users-verify-registration-otp"),
+            {
+                "phone": "+992900010004",
+                "otp_code": raw_code,
+            },
+            format="json",
+        )
+
+        response = self.client.post(
+            reverse("users-list"),
+            {
+                "phone": "+992900010004",
+                "first_name": "Missing",
+                "last_name": "Address",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("address", response.data)
