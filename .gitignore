@@ -33,6 +33,7 @@ Thumbs.db
 .mypy_cache/
 .ruff_cache/
 *.log
+backend/node_modules/
 
 # Local diagnostic scratch files
 backend/check_*.txt

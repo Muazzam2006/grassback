@@ -12,10 +12,6 @@ ALLOWED_HOSTS = config(
 
 INTERNAL_IPS = ["127.0.0.1", "localhost"]
 
-                                                                             
-                                                    
-                                                                             
-
 CORS_ALLOW_ALL_ORIGINS = True
 
 CSRF_TRUSTED_ORIGINS = config(
@@ -28,25 +24,13 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
 
-                                                                             
-                                         
-                                                                             
-
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
-                                                                             
-                                   
-                                                                             
 
 LOGGING["handlers"]["console"]["formatter"] = "verbose"                       
 LOGGING["root"]["level"] = "DEBUG"                       
 LOGGING["loggers"]["django.db.backends"]["level"] = config(                       
     "DJANGO_DB_LOG_LEVEL", default="DEBUG"
 )
-
-                                                                             
-                                                                   
-                                                                             
 
 CELERY_TASK_ALWAYS_EAGER = config("CELERY_TASK_ALWAYS_EAGER", cast=bool, default=False)
 CELERY_TASK_EAGER_PROPAGATES = True

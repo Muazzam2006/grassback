@@ -1,0 +1,79 @@
+:root {
+  --ui-radius: 0.625rem;
+}
+
+#content,
+.main,
+.content {
+  background: var(--background, #f8fafc);
+}
+
+.module,
+.inline-group,
+.dashboard .module,
+.change-list .results,
+.submit-row,
+.object-tools a {
+  border-radius: var(--ui-radius);
+}
+
+.module,
+.inline-group,
+.dashboard .module,
+.change-list .results,
+.submit-row {
+  background: var(--card, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+table thead th {
+  background: var(--muted, #f1f5f9);
+  color: var(--foreground, #0f172a);
+  font-weight: 600;
+}
+
+table tbody tr:nth-child(even) {
+  background: color-mix(in oklab, var(--muted, #f1f5f9) 30%, white 70%);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="url"],
+input[type="password"],
+input[type="search"],
+select,
+textarea {
+  border-radius: calc(var(--ui-radius) - 2px);
+  border: 1px solid var(--input, #cbd5e1);
+  background: var(--card, #ffffff);
+  color: var(--foreground, #0f172a);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--ring, #0f172a);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring, #0f172a) 18%, transparent);
+}
+
+.submit-row input,
+.submit-row a,
+input[type="submit"],
+.button,
+.button.default {
+  border-radius: calc(var(--ui-radius) - 2px);
+}
+
+.button.default,
+input.default[type="submit"] {
+  background: var(--primary, #111827);
+  border-color: var(--primary, #111827);
+  color: var(--primary-foreground, #ffffff);
+}
+
+.button.default:hover,
+input.default[type="submit"]:hover {
+  filter: brightness(0.96);
+}

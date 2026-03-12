@@ -4,25 +4,11 @@ from pathlib import Path
 
 from decouple import Csv, config
 
-                                                                             
-                                                                      
- 
-                                                                       
-                                                                          
-                                     
-                                                                
- 
-                                                                           
-                                                                              
-                           
-                                                                             
+                                                                            
 os.environ.setdefault("PGCLIENTENCODING", "UTF8")
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-                                                                             
-      
-                                                                             
 
 SECRET_KEY = config("DJANGO_SECRET_KEY")
 
@@ -37,9 +23,6 @@ LANGUAGE_CODE = "ru"
 USE_I18N = True
 USE_TZ = True
 
-                                                                             
-              
-                                                                             
 
 DJANGO_APPS = [
     "unfold",
@@ -52,6 +35,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    "django_cotton",
     "mptt",                                                                                         
     "rest_framework",
     "rest_framework_simplejwt",
@@ -84,6 +68,8 @@ UNFOLD = {
     "SHOW_VIEW_ON_SITE": False,
     "STYLES": [
         "admin_theme/css/unfold-sidebar-hierarchy.css",
+        "css/output.css",
+        "admin_theme/css/shadcn-admin-bridge.css",
     ],
     "COLORS": {
         "primary": {
@@ -102,9 +88,6 @@ UNFOLD = {
     },
 }
 
-                                                                             
-                                                                  
-                                                                             
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -138,9 +121,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-                                                                             
-                       
-                                                                             
 
 DATABASES = {
     "default": {
@@ -155,17 +135,12 @@ DATABASES = {
         "OPTIONS": {
                                                                                        
             "sslmode": config("DB_SSLMODE", default="prefer"),
-                                                                                 
-                                                                            
-                                                                     
+                                                                   
             "client_encoding": "UTF8",
         },
     }
 }
 
-                                                                             
-                     
-                                                                             
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -174,9 +149,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-                                                                             
-                
-                                                                             
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -190,10 +162,6 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-                                                                             
-                
-                                                                             
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -220,11 +188,6 @@ REST_FRAMEWORK = {
     },
 }
 
-                                                                             
-                                                                           
-                                                                       
-                                                                             
-
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
         minutes=config("JWT_ACCESS_LIFETIME_MIN", cast=int, default=15)
@@ -239,10 +202,6 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
 }
-
-                                                                             
-                 
-                                                                             
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Grass MLM API",
@@ -259,10 +218,6 @@ SPECTACULAR_SETTINGS = {
         "UserStatusEnum": "apps.users.models.UserStatus.choices",
     },
 }
-
-                                                                             
-      
-                                                                             
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
@@ -288,16 +243,8 @@ OTP_CODE_TTL_MINUTES = config("OTP_CODE_TTL_MINUTES", cast=int, default=5)
 OTP_MAX_ATTEMPTS = config("OTP_MAX_ATTEMPTS", cast=int, default=5)
 OTP_VERIFIED_TTL_MINUTES = config("OTP_VERIFIED_TTL_MINUTES", cast=int, default=30)
 
-                                                                             
-      
-                                                                             
-
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_HTTPONLY = False
-
-                                                                             
-                
-                                                                             
 
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/0")
 CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://redis:6379/1")
@@ -307,9 +254,6 @@ CELERY_TASK_SOFT_TIME_LIMIT = config("CELERY_TASK_SOFT_TIME_LIMIT", cast=int, de
 CELERY_TASK_ALWAYS_EAGER = False
 CELERY_TASK_EAGER_PROPAGATES = False
 
-                                                                             
-             
-                                                                             
 
 CACHES = {
     "default": {
@@ -321,10 +265,6 @@ CACHES = {
         },
     }
 }
-
-                                                                             
-         
-                                                                             
 
 LOG_LEVEL = config("DJANGO_LOG_LEVEL", default="INFO")
 
@@ -376,23 +316,12 @@ LOGGING = {
     },
 }
 
-                                                                             
-                    
-                                                                             
-
-                                                                     
-                                                                          
 RESERVATION_TIMEOUT_MINUTES: int = config(
     "RESERVATION_TIMEOUT_MINUTES",
     cast=int,
     default=21600,                       
 )
 
-                                                                             
-                            
-                                                                             
-                                                                            
-                                                        
 try:
     from celery.schedules import crontab              
 
@@ -413,5 +342,4 @@ try:
         },
     }
 except ImportError:
-                                                                             
     pass

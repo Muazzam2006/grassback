@@ -74,3 +74,5 @@ wcwidth==0.6.0
 django-redis>=5.4.0
 django-filter>=25.1
 django-unfold>=0.45.0
+django-cotton==2.6.1
+shadcn-django==0.24.1
