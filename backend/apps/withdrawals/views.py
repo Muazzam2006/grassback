@@ -68,7 +68,6 @@ class WithdrawalViewSet(
             withdrawal = request_withdrawal(
                 user=request.user,
                 amount=amount,
-                currency="USD",
             )
         except InsufficientBalanceError as exc:
             return Response(

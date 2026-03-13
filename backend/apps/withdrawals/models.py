@@ -46,7 +46,7 @@ class Withdrawal(models.Model):
     )
     currency = models.CharField(
         max_length=3,
-        default="USD",
+        default="TJS",
         verbose_name=_("Currency"),
     )
     status = models.CharField(

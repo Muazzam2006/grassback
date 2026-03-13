@@ -124,7 +124,7 @@ class Product(models.Model):
         verbose_name=_("Promo Price"),
         help_text=_("If set, overrides base price for all non-variant purchases."),
     )
-    currency = models.CharField(max_length=3, default="USD")
+    currency = models.CharField(max_length=3, default="TJS")
     is_active = models.BooleanField(default=True, db_index=True)
     is_visible = models.BooleanField(default=True, db_index=True)
     has_variants = models.BooleanField(

@@ -23,7 +23,7 @@ class InvalidWithdrawalStateError(WithdrawalError):
 
 
 @transaction.atomic
-def request_withdrawal(user: User, amount: Decimal, currency: str = "USD") -> Withdrawal:
+def request_withdrawal(user: User, amount: Decimal, currency: str = "TJS") -> Withdrawal:
     if amount <= Decimal("0.00"):
         raise ValueError("Withdrawal amount must be positive.")
 

@@ -48,7 +48,7 @@ class Order(models.Model):
         default=Decimal("0.00"),
         help_text=_("Snapshot of delivery fee at time of checkout."),
     )
-    currency = models.CharField(max_length=3, default="USD")
+    currency = models.CharField(max_length=3, default="TJS")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
