@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .models import NetworkStats, StatusThreshold
 
@@ -9,7 +10,7 @@ NetworkStats._meta.verbose_name_plural = "Сводки по структуре"
 
 
 @admin.register(StatusThreshold)
-class StatusThresholdAdmin(admin.ModelAdmin):
+class StatusThresholdAdmin(ModelAdmin):
 
     list_display = (
         "status_display",
@@ -46,7 +47,7 @@ class StatusThresholdAdmin(admin.ModelAdmin):
 
 
 @admin.register(NetworkStats)
-class NetworkStatsAdmin(admin.ModelAdmin):
+class NetworkStatsAdmin(ModelAdmin):
 
     list_display = (
         "user_display",

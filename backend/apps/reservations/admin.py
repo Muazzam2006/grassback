@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from django.utils.translation import gettext_lazy as _
 
 from .models import Reservation, ReservationStatus
@@ -15,7 +16,7 @@ RESERVATION_STATUS_LABELS = {
 
 
 @admin.register(Reservation)
-class ReservationAdmin(admin.ModelAdmin):
+class ReservationAdmin(ModelAdmin):
     list_display = (
         "user_display",
         "variant_display",

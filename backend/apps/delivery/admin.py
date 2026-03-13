@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline
 from django.utils.translation import gettext_lazy as _
 
 from .models import Courier, DeliveryAddress, DeliveryStatus, OrderDelivery
@@ -19,14 +20,14 @@ DELIVERY_STATUS_LABELS = {
 }
 
 
-class DeliveryAddressInline(admin.TabularInline):
+class DeliveryAddressInline(TabularInline):
     model = DeliveryAddress
     extra = 0
     readonly_fields = ("created_at", "updated_at")
 
 
 @admin.register(DeliveryAddress)
-class DeliveryAddressAdmin(admin.ModelAdmin):
+class DeliveryAddressAdmin(ModelAdmin):
     list_display = (
         "user_display",
         "first_name_display",
@@ -66,7 +67,7 @@ class DeliveryAddressAdmin(admin.ModelAdmin):
 
 
 @admin.register(Courier)
-class CourierAdmin(admin.ModelAdmin):
+class CourierAdmin(ModelAdmin):
     list_display = (
         "first_name_display",
         "last_name_display",
@@ -100,7 +101,7 @@ class CourierAdmin(admin.ModelAdmin):
 
 
 @admin.register(OrderDelivery)
-class OrderDeliveryAdmin(admin.ModelAdmin):
+class OrderDeliveryAdmin(ModelAdmin):
     list_display = (
         "order_display",
         "status_display",

@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin as UnfoldUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
@@ -55,7 +56,7 @@ class CustomUserChangeForm(forms.ModelForm):
 
 
 @admin.register(User)
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(UnfoldUserAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
     model = User
@@ -219,7 +220,7 @@ class CustomUserAdmin(UserAdmin):
 
 
 @admin.register(UserStatusHistory)
-class UserStatusHistoryAdmin(admin.ModelAdmin):
+class UserStatusHistoryAdmin(ModelAdmin):
 
     list_display = (
         "user_display",

@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from django.utils.translation import gettext_lazy as _
 
 from .models import Withdrawal, WithdrawalStatus
@@ -19,7 +20,7 @@ WITHDRAWAL_STATUS_LABELS = {
 
 
 @admin.register(Withdrawal)
-class WithdrawalAdmin(admin.ModelAdmin):
+class WithdrawalAdmin(ModelAdmin):
     list_display = (
         "reference_display",
         "user_display",

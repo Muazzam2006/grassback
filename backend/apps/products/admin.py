@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline, StackedInline
 
 from .models import (
     Brand,
@@ -10,6 +11,7 @@ from .models import (
     ProductVariant,
     ProductVariantAttributeValue,
 )
+from django.utils.html import format_html
 
 Brand._meta.verbose_name = "Бренд"
 Brand._meta.verbose_name_plural = "Бренды"
@@ -25,32 +27,49 @@ ProductVariant._meta.verbose_name = "Вариант товара"
 ProductVariant._meta.verbose_name_plural = "Варианты товара"
 
 
-class ProductImageInline(admin.TabularInline):
+class ProductImageInline(TabularInline):
     model = ProductImage
     extra = 0
+    fields = ("image", "image_url", "alt_text", "is_primary", "ordering", "image_preview")
+    readonly_fields = ("image_preview",)
+
+    @admin.display(description="Предпросмотр")
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height: 50px; border-radius: 4px;" />', obj.image.url)
+        elif obj.image_url:
+            return format_html('<img src="{}" style="max-height: 50px; border-radius: 4px;" />', obj.image_url)
+        return "-"
 
 
-class ProductVariantAttributeValueInline(admin.TabularInline):
+class ProductVariantAttributeValueInline(TabularInline):
     model = ProductVariantAttributeValue
     extra = 0
     readonly_fields = ("attribute_value",)
     can_delete = False
 
 
-class ProductAttributeValueInline(admin.TabularInline):
+class ProductAttributeValueInline(TabularInline):
     model = ProductAttributeValue
     extra = 0
     fields = ("value",)
 
 
-class ProductVariantInline(admin.TabularInline):
+class ProductVariantInline(TabularInline):
     model = ProductVariant
     extra = 0
-    fields = ("sku", "stock", "price_override", "promo_price", "is_active")
+    fields = ("sku", "image", "image_preview", "stock", "price_override", "promo_price", "is_active")
+    readonly_fields = ("image_preview",)
+
+    @admin.display(description="Предпросмотр")
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height: 50px; border-radius: 4px;" />', obj.image.url)
+        return "-"
 
 
 @admin.register(Brand)
-class BrandAdmin(admin.ModelAdmin):
+class BrandAdmin(ModelAdmin):
     list_display = ("name_display", "is_active_display", "created_at_display")
     list_filter = ("is_active",)
     search_fields = ("name", "slug")
@@ -70,7 +89,7 @@ class BrandAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProductCategory)
-class ProductCategoryAdmin(admin.ModelAdmin):
+class ProductCategoryAdmin(ModelAdmin):
     list_display = (
         "name_display",
         "parent_display",
@@ -99,7 +118,10 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(ModelAdmin):
+    class Media:
+        js = ("js/product_admin.js",)
+
     list_display = (
         "name_display",
         "brand_display",
@@ -161,7 +183,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProductAttribute)
-class ProductAttributeAdmin(admin.ModelAdmin):
+class ProductAttributeAdmin(ModelAdmin):
     list_display = ("name_display",)
     search_fields = ("name",)
     inlines = [ProductAttributeValueInline]
@@ -172,7 +194,7 @@ class ProductAttributeAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProductAttributeValue)
-class ProductAttributeValueAdmin(admin.ModelAdmin):
+class ProductAttributeValueAdmin(ModelAdmin):
     list_display = ("attribute_display", "value_display")
     list_filter = ("attribute",)
     search_fields = ("value", "attribute__name")
@@ -190,9 +212,10 @@ class ProductAttributeValueAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProductVariant)
-class ProductVariantAdmin(admin.ModelAdmin):
+class ProductVariantAdmin(ModelAdmin):
     list_display = (
         "sku_display",
+        "image_preview_list",
         "product_display",
         "stock_display",
         "price_override_display",
@@ -203,6 +226,12 @@ class ProductVariantAdmin(admin.ModelAdmin):
     search_fields = ("sku", "product__name")
     readonly_fields = ("created_at", "updated_at")
     inlines = [ProductVariantAttributeValueInline]
+
+    @admin.display(description="Изображение")
+    def image_preview_list(self, obj: ProductVariant):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height: 40px; border-radius: 4px;" />', obj.image.url)
+        return "-"
 
     @admin.display(description="Артикул", ordering="sku")
     def sku_display(self, obj: ProductVariant):

@@ -3,6 +3,8 @@ from datetime import timedelta
 from pathlib import Path
 
 from decouple import Csv, config
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
                                                                             
 os.environ.setdefault("PGCLIENTENCODING", "UTF8")
@@ -66,6 +68,153 @@ UNFOLD = {
     "SITE_SYMBOL": "inventory_2",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": False,
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": _("Обзор"),
+                "items": [
+                    {
+                        "title": _("Панель управления"),
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                ],
+            },
+            {
+                "title": _("Пользователи"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Клиенты"),
+                        "icon": "group",
+                        "link": reverse_lazy("admin:users_user_changelist"),
+                    },
+                    {
+                        "title": _("История статусов"),
+                        "icon": "history",
+                        "link": reverse_lazy("admin:users_userstatushistory_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Каталог"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Товары"),
+                        "icon": "inventory_2",
+                        "link": reverse_lazy("admin:products_product_changelist"),
+                    },
+                    {
+                        "title": _("Категории"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:products_productcategory_changelist"),
+                    },
+                    {
+                        "title": _("Бренды"),
+                        "icon": "branding_watermark",
+                        "link": reverse_lazy("admin:products_brand_changelist"),
+                    },
+                    {
+                        "title": _("Характеристики"),
+                        "icon": "tune",
+                        "link": reverse_lazy("admin:products_productattribute_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Продажи"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Заказы"),
+                        "icon": "shopping_cart",
+                        "link": reverse_lazy("admin:orders_order_changelist"),
+                    },
+                    {
+                        "title": _("Позиции заказов"),
+                        "icon": "receipt_long",
+                        "link": reverse_lazy("admin:orders_orderitem_changelist"),
+                    },
+                    {
+                        "title": _("История статусов заказов"),
+                        "icon": "timeline",
+                        "link": reverse_lazy("admin:orders_orderlifecyclelog_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Логистика"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Адреса получателей"),
+                        "icon": "home_pin",
+                        "link": reverse_lazy("admin:delivery_deliveryaddress_changelist"),
+                    },
+                    {
+                        "title": _("Отгрузки заказов"),
+                        "icon": "local_shipping",
+                        "link": reverse_lazy("admin:delivery_orderdelivery_changelist"),
+                    },
+                    {
+                        "title": _("Курьеры"),
+                        "icon": "delivery_dining",
+                        "link": reverse_lazy("admin:delivery_courier_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Финансы и MLM"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Начисления бонусов"),
+                        "icon": "savings",
+                        "link": reverse_lazy("admin:bonuses_bonus_changelist"),
+                    },
+                    {
+                        "title": _("Правила начисления"),
+                        "icon": "rule",
+                        "link": reverse_lazy("admin:bonuses_mlmrule_changelist"),
+                    },
+                    {
+                        "title": _("Пороги карьерных статусов"),
+                        "icon": "workspace_premium",
+                        "link": reverse_lazy("admin:mlm_statusthreshold_changelist"),
+                    },
+                    {
+                        "title": _("Сводки по структуре"),
+                        "icon": "monitoring",
+                        "link": reverse_lazy("admin:mlm_networkstats_changelist"),
+                    },
+                    {
+                        "title": _("Заявки на вывод"),
+                        "icon": "account_balance_wallet",
+                        "link": reverse_lazy("admin:withdrawals_withdrawal_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Сервис"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Резервы товаров"),
+                        "icon": "event_available",
+                        "link": reverse_lazy("admin:reservations_reservation_changelist"),
+                    },
+                    {
+                        "title": _("Уведомления"),
+                        "icon": "notifications",
+                        "link": reverse_lazy("admin:notifications_notification_changelist"),
+                    },
+                ],
+            },
+        ],
+    },
     "STYLES": [
         "admin_theme/css/unfold-sidebar-hierarchy.css",
         "css/output.css",

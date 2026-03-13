@@ -121,4 +121,24 @@
     body {
         @apply bg-background text-foreground;
     }
+    /* Fix Unfold Admin Form Elements */
+    input[type="text"], input[type="password"], input[type="email"], input[type="number"], input[type="url"], input[type="date"], input[type="datetime-local"], input[type="month"], input[type="search"], input[type="tel"], input[type="time"], input[type="week"],
+    select, textarea, .vTextField, .vLargeTextField, .vSelectMultipleField {
+        @apply bg-background text-foreground border-border bg-none !important;
+    }
+
+    /* Fix Unfold descriptive text / help text under inputs */
+    .help, .helptext {
+        @apply text-muted-foreground !important;
+    }
+
+    /* Fix label colors */
+    label {
+        @apply text-foreground !important;
+    }
+
+    /* Enhance general button styles */
+    .button, input[type="submit"], input[type="button"], .submit-row button, .submit-row a {
+        @apply px-4 py-2 rounded-md transition-colors shadow-sm font-medium !important;
+    }
 }

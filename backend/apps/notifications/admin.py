@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .models import Notification
 
@@ -7,7 +8,7 @@ Notification._meta.verbose_name_plural = "Уведомления"
 
 
 @admin.register(Notification)
-class NotificationAdmin(admin.ModelAdmin):
+class NotificationAdmin(ModelAdmin):
     list_display = (
         "user_display",
         "channel_display",

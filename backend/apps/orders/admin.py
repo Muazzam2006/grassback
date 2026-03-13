@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline, StackedInline
 
 from .models import Order, OrderItem, OrderLifecycleLog, OrderStatus
 from .services import (
@@ -27,7 +28,7 @@ ORDER_STATUS_LABELS = {
 }
 
 
-class OrderItemInline(admin.TabularInline):
+class OrderItemInline(TabularInline):
     model = OrderItem
     extra = 0
     readonly_fields = (
@@ -71,7 +72,7 @@ class OrderItemInline(admin.TabularInline):
         return obj.line_total
 
 
-class OrderLifecycleLogInline(admin.TabularInline):
+class OrderLifecycleLogInline(TabularInline):
     model = OrderLifecycleLog
     extra = 0
     readonly_fields = (
@@ -107,7 +108,7 @@ class OrderLifecycleLogInline(admin.TabularInline):
 
 
 @admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
+class OrderAdmin(ModelAdmin):
     list_display = (
         "user_display",
         "status_display",
@@ -235,7 +236,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 
 @admin.register(OrderItem)
-class OrderItemAdmin(admin.ModelAdmin):
+class OrderItemAdmin(ModelAdmin):
     list_display = (
         "order_display",
         "product_display",
@@ -290,7 +291,7 @@ class OrderItemAdmin(admin.ModelAdmin):
 
 
 @admin.register(OrderLifecycleLog)
-class OrderLifecycleLogAdmin(admin.ModelAdmin):
+class OrderLifecycleLogAdmin(ModelAdmin):
     list_display = (
         "order_display",
         "from_status_display",

@@ -184,7 +184,8 @@ class ProductImage(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="images",
     )
-    image_url = models.URLField(max_length=500, verbose_name=_("Image URL"))
+    image = models.ImageField(upload_to="products/images/", null=True, blank=True, verbose_name=_("Изображение (файл)"))
+    image_url = models.URLField(max_length=500, null=True, blank=True, verbose_name=_("Image URL"))
     alt_text = models.CharField(max_length=255, blank=True)
     is_primary = models.BooleanField(default=False, db_index=True)
     ordering = models.PositiveIntegerField(default=0)
@@ -250,6 +251,7 @@ class ProductVariant(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="variants",
     )
+    image = models.ImageField(upload_to="products/variants/", null=True, blank=True, verbose_name=_("Изображение варианта"))
     sku = models.CharField(max_length=100, db_index=True, verbose_name=_("SKU"))
     stock = models.PositiveIntegerField(
         default=0,

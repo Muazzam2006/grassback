@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .models import Bonus, BonusStatus, CalculationType, MLMRule
 
@@ -9,7 +10,7 @@ Bonus._meta.verbose_name_plural = "Начисления бонусов"
 
 
 @admin.register(MLMRule)
-class MLMRuleAdmin(admin.ModelAdmin):
+class MLMRuleAdmin(ModelAdmin):
     list_display = (
         "agent_status_display",
         "level_display",
@@ -58,7 +59,7 @@ class MLMRuleAdmin(admin.ModelAdmin):
 
 
 @admin.register(Bonus)
-class BonusAdmin(admin.ModelAdmin):
+class BonusAdmin(ModelAdmin):
     list_display = (
         "recipient_display",
         "source_user_display",
