@@ -5,6 +5,16 @@ from .models import Notification
 
 Notification._meta.verbose_name = "Уведомление"
 Notification._meta.verbose_name_plural = "Уведомления"
+Notification._meta.get_field("user").verbose_name = "Получатель"
+Notification._meta.get_field("channel").verbose_name = "Канал"
+Notification._meta.get_field("is_read").verbose_name = "Прочитано"
+Notification._meta.get_field("created_at").verbose_name = "Создано"
+Notification._meta.get_field("sent_at").verbose_name = "Отправлено"
+Notification._meta.get_field("channel").choices = [
+    (Notification.CHANNEL_PUSH, "Пуш"),
+    (Notification.CHANNEL_SMS, "SMS"),
+    (Notification.CHANNEL_IN_APP, "В приложении"),
+]
 
 
 @admin.register(Notification)
@@ -19,7 +29,7 @@ class NotificationAdmin(ModelAdmin):
     )
     list_filter = ("channel", "is_read", "created_at")
     search_fields = ("user__phone", "title", "body")
-    readonly_fields = ("user", "channel", "title", "body", "sent_at", "created_at")
+    readonly_fields = ("user", "channel", "title", "body", "sent_at")
 
     @admin.display(description="Пользователь", ordering="user__phone")
     def user_display(self, obj: Notification):

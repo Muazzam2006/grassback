@@ -17,6 +17,25 @@ OrderItem._meta.verbose_name_plural = "Позиции заказа"
 OrderLifecycleLog._meta.verbose_name = "История заказа"
 OrderLifecycleLog._meta.verbose_name_plural = "История заказов"
 
+_ORDER_STATUS_CHOICES_RU = [
+    (OrderStatus.CREATED, "Создан"),
+    (OrderStatus.RESERVED, "Забронирован"),
+    (OrderStatus.CONFIRMED, "Подтвержден"),
+    (OrderStatus.SHIPPED, "Отправлен"),
+    (OrderStatus.DELIVERED, "Доставлен"),
+    (OrderStatus.CANCELLED, "Отменен"),
+]
+
+Order._meta.get_field("status").verbose_name = "Статус"
+Order._meta.get_field("status").choices = _ORDER_STATUS_CHOICES_RU
+Order._meta.get_field("currency").verbose_name = "Валюта"
+Order._meta.get_field("created_at").verbose_name = "Создан"
+
+OrderLifecycleLog._meta.get_field("from_status").verbose_name = "Статус до"
+OrderLifecycleLog._meta.get_field("to_status").verbose_name = "Статус после"
+OrderLifecycleLog._meta.get_field("from_status").choices = _ORDER_STATUS_CHOICES_RU
+OrderLifecycleLog._meta.get_field("to_status").choices = _ORDER_STATUS_CHOICES_RU
+
 
 ORDER_STATUS_LABELS = {
     OrderStatus.CREATED: "Создан",
@@ -80,7 +99,6 @@ class OrderLifecycleLogInline(TabularInline):
         "to_status_display",
         "changed_by_display",
         "note_display",
-        "created_at_display",
     )
     fields = readonly_fields
     can_delete = False
@@ -125,7 +143,7 @@ class OrderAdmin(ModelAdmin):
     readonly_fields = (
         "user", "status",
         "total_amount", "delivery_fee", "grand_total_display",
-        "currency", "delivery_address", "created_at", "updated_at",
+        "currency", "delivery_address",
     )
     list_select_related = ("user", "delivery_address")
     inlines = [OrderItemInline, OrderLifecycleLogInline]
@@ -261,6 +279,9 @@ class OrderItemAdmin(ModelAdmin):
     def has_change_permission(self, request, obj=None) -> bool:
         return False
 
+    def get_model_perms(self, request):
+        return {}
+
     @admin.display(description="Заказ", ordering="order__created_at")
     def order_display(self, obj: OrderItem):
         return obj.order
@@ -300,7 +321,7 @@ class OrderLifecycleLogAdmin(ModelAdmin):
         "created_at_display",
     )
     list_filter = ("to_status", "from_status")
-    readonly_fields = ("order", "from_status", "to_status", "changed_by", "note", "created_at")
+    readonly_fields = ("order", "from_status", "to_status", "changed_by", "note")
 
     @admin.display(description="Заказ", ordering="order__created_at")
     def order_display(self, obj: OrderLifecycleLog):
@@ -330,3 +351,6 @@ class OrderLifecycleLogAdmin(ModelAdmin):
 
     def has_delete_permission(self, request, obj=None) -> bool:
         return False
+
+    def get_model_perms(self, request):
+        return {}

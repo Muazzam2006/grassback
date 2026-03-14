@@ -12,6 +12,21 @@ Courier._meta.verbose_name_plural = "Курьеры"
 OrderDelivery._meta.verbose_name = "Отгрузка заказа"
 OrderDelivery._meta.verbose_name_plural = "Отгрузки заказов"
 
+DeliveryAddress._meta.get_field("is_default").verbose_name = "По умолчанию"
+DeliveryAddress._meta.get_field("region").verbose_name = "Регион"
+DeliveryAddress._meta.get_field("city").verbose_name = "Город"
+
+Courier._meta.get_field("is_active").verbose_name = "Активен"
+
+OrderDelivery._meta.get_field("status").verbose_name = "Статус"
+OrderDelivery._meta.get_field("status").choices = [
+    (DeliveryStatus.PENDING, "В ожидании"),
+    (DeliveryStatus.SHIPPED, "Отправлен"),
+    (DeliveryStatus.DELIVERED, "Доставлен"),
+    (DeliveryStatus.CANCELLED, "Отменен"),
+]
+OrderDelivery._meta.get_field("courier").verbose_name = "Курьер"
+
 DELIVERY_STATUS_LABELS = {
     DeliveryStatus.PENDING: "В ожидании",
     DeliveryStatus.SHIPPED: "Отправлен",
@@ -23,7 +38,7 @@ DELIVERY_STATUS_LABELS = {
 class DeliveryAddressInline(TabularInline):
     model = DeliveryAddress
     extra = 0
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ()
 
 
 @admin.register(DeliveryAddress)
@@ -38,7 +53,7 @@ class DeliveryAddressAdmin(ModelAdmin):
     )
     list_filter = ("is_default", "region", "city")
     search_fields = ("user__phone", "first_name", "last_name", "phone", "city")
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ()
     ordering = ("user", "-is_default")
 
     @admin.display(description="Пользователь", ordering="user__phone")
@@ -77,7 +92,7 @@ class CourierAdmin(ModelAdmin):
     )
     list_filter = ("is_active",)
     search_fields = ("first_name", "last_name", "phone")
-    readonly_fields = ("created_at",)
+    readonly_fields = ()
 
     @admin.display(description="Имя", ordering="first_name")
     def first_name_display(self, obj: Courier):
@@ -113,7 +128,7 @@ class OrderDeliveryAdmin(ModelAdmin):
     )
     list_filter = ("status", "courier")
     search_fields = ("order__id", "tracking_number", "courier__phone")
-    readonly_fields = ("order", "delivery_fee", "created_at", "updated_at")
+    readonly_fields = ("order", "delivery_fee")
     actions = ["action_ship", "action_deliver", "action_cancel"]
     ordering = ("-created_at",)
 

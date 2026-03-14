@@ -6,6 +6,14 @@ from .models import Reservation, ReservationStatus
 
 Reservation._meta.verbose_name = "Резерв товара"
 Reservation._meta.verbose_name_plural = "Резервы товаров"
+Reservation._meta.get_field("status").verbose_name = "Статус"
+Reservation._meta.get_field("status").choices = [
+    (ReservationStatus.ACTIVE, "Активен"),
+    (ReservationStatus.EXPIRED, "Истек"),
+    (ReservationStatus.CONVERTED, "Преобразован в заказ"),
+    (ReservationStatus.CANCELLED, "Отменен"),
+]
+Reservation._meta.get_field("created_at").verbose_name = "Создан"
 
 RESERVATION_STATUS_LABELS = {
     ReservationStatus.ACTIVE: "Активен",
@@ -39,8 +47,6 @@ class ReservationAdmin(ModelAdmin):
         "quantity",
         "status",
         "expires_at",
-        "created_at",
-        "updated_at",
     )
     list_select_related = ("user", "variant", "variant__product")
 
@@ -76,6 +82,9 @@ class ReservationAdmin(ModelAdmin):
 
     def has_delete_permission(self, request, obj=None) -> bool:
         return False
+
+    def get_model_perms(self, request):
+        return {}
 
     @admin.action(description=_("Принудительно завершить выбранные активные брони"))
     def force_expire(self, request, queryset):

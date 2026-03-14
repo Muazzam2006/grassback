@@ -6,12 +6,31 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
-from .models import User, UserStatusHistory
+from .models import User, UserStatus, UserStatusHistory
 
 User._meta.verbose_name = "Пользователь"
 User._meta.verbose_name_plural = "Пользователи"
 UserStatusHistory._meta.verbose_name = "История статусов"
 UserStatusHistory._meta.verbose_name_plural = "История статусов"
+
+_USER_STATUS_CHOICES_RU = [
+    (UserStatus.NEW, "Новый"),
+    (UserStatus.BRONZE, "Бронза"),
+    (UserStatus.SILVER, "Серебро"),
+    (UserStatus.GOLD, "Золото"),
+]
+
+User._meta.get_field("status").verbose_name = "Статус"
+User._meta.get_field("status").choices = _USER_STATUS_CHOICES_RU
+User._meta.get_field("level").verbose_name = "Уровень"
+User._meta.get_field("is_active").verbose_name = "Активен"
+User._meta.get_field("is_staff").verbose_name = "Сотрудник"
+User._meta.get_field("date_joined").verbose_name = "Дата регистрации"
+
+UserStatusHistory._meta.get_field("old_status").verbose_name = "Старый статус"
+UserStatusHistory._meta.get_field("new_status").verbose_name = "Новый статус"
+UserStatusHistory._meta.get_field("old_status").choices = _USER_STATUS_CHOICES_RU
+UserStatusHistory._meta.get_field("new_status").choices = _USER_STATUS_CHOICES_RU
 
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -103,7 +122,7 @@ class CustomUserAdmin(UnfoldUserAdmin):
     actions = None
 
     fieldsets = (
-        (None, {"fields": ("phone", "password")}),
+        (None, {"fields": ("phone",)}),
         (_("Личные данные"), {"fields": ("first_name", "last_name", "address")}),
         (
             _("MLM-данные"),
@@ -126,14 +145,11 @@ class CustomUserAdmin(UnfoldUserAdmin):
             },
         ),
         (
-            _("Права доступа"),
+            _("Статус профиля"),
             {
                 "fields": (
                     "is_active",
                     "is_staff",
-                    "is_superuser",
-                    "groups",
-                    "user_permissions",
                 ),
             },
         ),
@@ -158,6 +174,18 @@ class CustomUserAdmin(UnfoldUserAdmin):
             },
         ),
     )
+
+    def get_fieldsets(self, request, obj=None):
+        if not obj:
+            return self.add_fieldsets
+        return super().get_fieldsets(request, obj)
+
+    def get_form(self, request, obj=None, **kwargs):
+        defaults = {}
+        if obj is None:
+            defaults['form'] = self.add_form
+        defaults.update(kwargs)
+        return super().get_form(request, obj, **defaults)
 
     def get_queryset(self, request) -> QuerySet:
         return (
@@ -214,8 +242,12 @@ class CustomUserAdmin(UnfoldUserAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly = list(self.readonly_fields)
         if obj:
-            readonly.append("parent")
+            # Cannot edit personal info after creation
+            readonly.extend(["phone", "first_name", "last_name", "address", "parent"])
         return readonly
+
+    def has_add_permission(self, request) -> bool:
+        return False
 
 
 
@@ -232,7 +264,7 @@ class UserStatusHistoryAdmin(ModelAdmin):
     list_filter = ("old_status", "new_status")
     search_fields = ("user__phone", "user__first_name", "user__last_name")
     ordering = ("-changed_at",)
-    readonly_fields = ("user", "old_status", "new_status", "changed_by", "reason", "changed_at")
+    readonly_fields = ("user", "old_status", "new_status", "changed_by", "reason")
     list_select_related = ("user", "changed_by")
 
     @admin.display(description="Пользователь", ordering="user__phone")
@@ -277,6 +309,4 @@ class UserStatusHistoryAdmin(ModelAdmin):
         return False
 
     def get_model_perms(self, request):
-        if request.user.is_superuser:
-            return super().get_model_perms(request)
         return {}

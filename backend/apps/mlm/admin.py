@@ -19,7 +19,7 @@ class StatusThresholdAdmin(ModelAdmin):
         "updated_at_display",
     )
     ordering = ("min_personal_turnover",)
-    readonly_fields = ("updated_at",)
+    readonly_fields = ()
 
     @admin.display(description="Статус", ordering="status")
     def status_display(self, obj: StatusThreshold):
@@ -57,7 +57,7 @@ class NetworkStatsAdmin(ModelAdmin):
     )
     search_fields = ("user__phone", "user__first_name", "user__last_name")
     ordering = ("-team_sales",)
-    readonly_fields = ("user", "team_size", "team_sales", "updated_at")
+    readonly_fields = ("user", "team_size", "team_sales")
 
     @admin.display(description="Пользователь", ordering="user__phone")
     def user_display(self, obj: NetworkStats):
@@ -83,3 +83,6 @@ class NetworkStatsAdmin(ModelAdmin):
 
     def has_change_permission(self, request, obj=None) -> bool:
         return False
+
+    def get_model_perms(self, request):
+        return {}

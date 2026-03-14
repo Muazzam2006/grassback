@@ -22,17 +22,17 @@ _EMPTY_ATTRIBUTES_HASH = _compute_attribute_hash([])
 
 class Brand(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, unique=True, db_index=True, verbose_name=_("Name"))
-    slug = models.SlugField(max_length=120, unique=True, verbose_name=_("Slug"))
-    description = models.TextField(blank=True, verbose_name=_("Description"))
-    is_active = models.BooleanField(default=True, db_index=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    name = models.CharField(max_length=100, unique=True, db_index=True, verbose_name=_("Название"))
+    slug = models.SlugField(max_length=120, unique=True, verbose_name=_("ЧПУ (Slug)"))
+    description = models.TextField(blank=True, verbose_name=_("Описание"))
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name=_("Активен"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создан"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлен"))
 
     class Meta:
         db_table = "products_brand"
-        verbose_name = _("Brand")
-        verbose_name_plural = _("Brands")
+        verbose_name = _("Бренд")
+        verbose_name_plural = _("Бренды")
         ordering = ["name"]
 
     def __str__(self) -> str:
@@ -54,21 +54,21 @@ class Brand(models.Model):
 
 class ProductCategory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, verbose_name=_("Name"))
-    slug = models.SlugField(max_length=120, unique=True, db_index=True, verbose_name=_("Slug"))
+    name = models.CharField(max_length=100, verbose_name=_("Название"))
+    slug = models.SlugField(max_length=120, unique=True, db_index=True, verbose_name=_("ЧПУ (Slug)"))
     parent = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.SET_NULL,
-        related_name="subcategories", verbose_name=_("Parent Category"),
+        related_name="subcategories", verbose_name=_("Родительская категория"),
     )
-    is_active = models.BooleanField(default=True, db_index=True)
-    ordering = models.PositiveIntegerField(default=0, verbose_name=_("Display Order"))
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name=_("Активна"))
+    ordering = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создана"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлена"))
 
     class Meta:
         db_table = "products_category"
-        verbose_name = _("Product Category")
-        verbose_name_plural = _("Product Categories")
+        verbose_name = _("Категория товара")
+        verbose_name_plural = _("Категории товаров")
         ordering = ["ordering", "name"]
         indexes = [
             models.Index(fields=["parent", "is_active"], name="category_parent_active_idx"),
@@ -99,52 +99,61 @@ class ProductCategory(models.Model):
 
 class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255, db_index=True)
-    slug = models.SlugField(max_length=255, unique=True)
-    description = models.TextField(blank=True)
+    name = models.CharField(max_length=255, db_index=True, verbose_name=_("Название"))
+    slug = models.SlugField(max_length=255, unique=True, verbose_name=_("ЧПУ (Slug)"))
+    description = models.TextField(blank=True, verbose_name=_("Описание"))
 
     category = models.ForeignKey(
         ProductCategory, null=True, blank=True, on_delete=models.PROTECT,
-        related_name="products", verbose_name=_("Category"),
+        related_name="products", verbose_name=_("Категория"),
     )
     brand = models.ForeignKey(
         Brand, null=True, blank=True, on_delete=models.PROTECT,
-        related_name="products", verbose_name=_("Brand"),
+        related_name="products", verbose_name=_("Бренд"),
     )
 
     price = models.DecimalField(
         max_digits=14, decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))],
-        verbose_name=_("Base Price"),
+        verbose_name=_("Базовая цена"),
     )
     promo_price = models.DecimalField(
         max_digits=14, decimal_places=2,
         null=True, blank=True,
         validators=[MinValueValidator(Decimal("0.00"))],
-        verbose_name=_("Promo Price"),
-        help_text=_("If set, overrides base price for all non-variant purchases."),
+        verbose_name=_("Цена по акции"),
+        help_text=_("Если указано, переопределяет базовую цену."),
     )
-    currency = models.CharField(max_length=3, default="TJS")
-    is_active = models.BooleanField(default=True, db_index=True)
-    is_visible = models.BooleanField(default=True, db_index=True)
+    currency = models.CharField(max_length=3, default="TJS", verbose_name=_("Валюта"))
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name=_("Активен"))
+    is_visible = models.BooleanField(default=True, db_index=True, verbose_name=_("Показывать"))
+    stock = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Остаток"),
+        help_text=_("Доступное количество для товаров без вариантов."),
+    )
     has_variants = models.BooleanField(
         default=False, db_index=True,
-        verbose_name=_("Has Variants"),
-        help_text=_("True when product has SKU-level variants."),
+        verbose_name=_("Есть варианты"),
+        help_text=_("Отметьте, если у товара есть варианты с разными артикулами (SKU)."),
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создан"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлен"))
 
     class Meta:
         db_table = "products_product"
         ordering = ["-created_at"]
-        verbose_name = _("Product")
-        verbose_name_plural = _("Products")
+        verbose_name = _("Товар")
+        verbose_name_plural = _("Товары")
         constraints = [
             models.CheckConstraint(condition=models.Q(price__gte=0), name="product_price_gte_0"),
             models.CheckConstraint(
                 condition=models.Q(promo_price__isnull=True) | models.Q(promo_price__gte=0),
                 name="prod_promo_price_gte_0",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(stock__gte=0),
+                name="prod_stock_gte_0",
             ),
         ]
         indexes = [
@@ -183,17 +192,18 @@ class ProductImage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="images",
+        verbose_name=_("Товар"),
     )
     image = models.ImageField(upload_to="products/images/", null=True, blank=True, verbose_name=_("Изображение (файл)"))
-    image_url = models.URLField(max_length=500, null=True, blank=True, verbose_name=_("Image URL"))
-    alt_text = models.CharField(max_length=255, blank=True)
-    is_primary = models.BooleanField(default=False, db_index=True)
-    ordering = models.PositiveIntegerField(default=0)
+    image_url = models.URLField(max_length=500, null=True, blank=True, verbose_name=_("URL-адрес изображения"))
+    alt_text = models.CharField(max_length=255, blank=True, verbose_name=_("Альтернативный текст"))
+    is_primary = models.BooleanField(default=False, db_index=True, verbose_name=_("Основное"))
+    ordering = models.PositiveIntegerField(default=0, verbose_name=_("Порядок"))
 
     class Meta:
         db_table = "products_image"
-        verbose_name = _("Product Image")
-        verbose_name_plural = _("Product Images")
+        verbose_name = _("Изображение товара")
+        verbose_name_plural = _("Изображения товаров")
         ordering = ["ordering"]
         constraints = [
                                                 
@@ -210,11 +220,12 @@ class ProductImage(models.Model):
 
 class ProductAttribute(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, unique=True, verbose_name=_("Name"))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_("Название"))
 
     class Meta:
         db_table = "products_attribute"
-        verbose_name = _("Product Attribute")
+        verbose_name = _("Характеристика товара")
+        verbose_name_plural = _("Характеристики товаров")
         ordering = ["name"]
 
     def __str__(self) -> str:
@@ -225,12 +236,14 @@ class ProductAttributeValue(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     attribute = models.ForeignKey(
         ProductAttribute, on_delete=models.CASCADE, related_name="values",
+        verbose_name=_("Характеристика"),
     )
-    value = models.CharField(max_length=100, verbose_name=_("Value"))
+    value = models.CharField(max_length=100, verbose_name=_("Значение"))
 
     class Meta:
         db_table = "products_attribute_value"
-        verbose_name = _("Attribute Value")
+        verbose_name = _("Значение характеристики")
+        verbose_name_plural = _("Значения характеристик")
         ordering = ["attribute", "value"]
         constraints = [
             models.UniqueConstraint(
@@ -250,43 +263,44 @@ class ProductVariant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="variants",
+        verbose_name=_("Товар"),
     )
     image = models.ImageField(upload_to="products/variants/", null=True, blank=True, verbose_name=_("Изображение варианта"))
-    sku = models.CharField(max_length=100, db_index=True, verbose_name=_("SKU"))
+    sku = models.CharField(max_length=100, db_index=True, verbose_name=_("Артикул (SKU)"))
     stock = models.PositiveIntegerField(
         default=0,
-        verbose_name=_("Stock"),
-        help_text=_("Available units.  Updated atomically via F() expressions."),
+        verbose_name=_("Остаток"),
+        help_text=_("Доступное количество."),
     )
     price_override = models.DecimalField(
         max_digits=14, decimal_places=2,
         null=True, blank=True,
         validators=[MinValueValidator(Decimal("0.00"))],
-        verbose_name=_("Price Override"),
-        help_text=_("If set, replaces product base price for this SKU."),
+        verbose_name=_("Переопределение цены"),
+        help_text=_("Если указано, заменяет базовую цену товара для этого варианта."),
     )
     promo_price = models.DecimalField(
         max_digits=14, decimal_places=2,
         null=True, blank=True,
         validators=[MinValueValidator(Decimal("0.00"))],
-        verbose_name=_("Promo Price Override"),
+        verbose_name=_("Переопределение цены по акции"),
     )
-    is_active = models.BooleanField(default=True, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name=_("Активен"))
 
     attributes_hash = models.CharField(
         max_length=64,
         editable=False,
         db_index=True,
-        verbose_name=_("Attributes Hash"),
+        verbose_name=_("Хэш атрибутов"),
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создан"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлен"))
 
     class Meta:
         db_table = "products_variant"
-        verbose_name = _("Product Variant")
-        verbose_name_plural = _("Product Variants")
+        verbose_name = _("Вариант товара")
+        verbose_name_plural = _("Варианты товара")
         constraints = [
             models.UniqueConstraint(
                 fields=["product", "sku"],
@@ -311,7 +325,7 @@ class ProductVariant(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"Variant({self.product.name}, SKU={self.sku})"
+        return f"Артикул: {self.sku}"
 
     def save(self, *args, **kwargs):
         if not self.attributes_hash:
@@ -330,14 +344,17 @@ class ProductVariant(models.Model):
 class ProductVariantAttributeValue(models.Model):
     variant = models.ForeignKey(
         ProductVariant, on_delete=models.CASCADE, related_name="attribute_values",
+        verbose_name=_("Вариант"),
     )
     attribute_value = models.ForeignKey(
         ProductAttributeValue, on_delete=models.PROTECT, related_name="variant_links",
+        verbose_name=_("Значение характеристики"),
     )
 
     class Meta:
         db_table = "products_variant_attribute_value"
-        verbose_name = _("Variant Attribute Value")
+        verbose_name = _("Значение характеристики варианта")
+        verbose_name_plural = _("Значения характеристик вариантов")
         constraints = [
             models.UniqueConstraint(
                 fields=["variant", "attribute_value"],

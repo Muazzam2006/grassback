@@ -3,9 +3,6 @@ import os
 import sys
                                                                      
 os.environ.setdefault("PGCLIENTENCODING", "UTF8")
-os.environ.setdefault("LC_ALL", "English_United States.1252")
-os.environ.setdefault("LANG", "en_US.UTF-8")
-os.environ.setdefault("PGOPTIONS", "-c lc_messages=en_US.UTF-8")
 
 
 def main() -> None:

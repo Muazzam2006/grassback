@@ -11,6 +11,14 @@ from .services import (
 
 Withdrawal._meta.verbose_name = "Заявка на вывод"
 Withdrawal._meta.verbose_name_plural = "Заявки на вывод"
+Withdrawal._meta.get_field("status").verbose_name = "Статус"
+Withdrawal._meta.get_field("status").choices = [
+    (WithdrawalStatus.PENDING, "В ожидании"),
+    (WithdrawalStatus.APPROVED, "Подтверждена"),
+    (WithdrawalStatus.REJECTED, "Отклонена"),
+]
+Withdrawal._meta.get_field("currency").verbose_name = "Валюта"
+Withdrawal._meta.get_field("requested_at").verbose_name = "Запрошено"
 
 WITHDRAWAL_STATUS_LABELS = {
     WithdrawalStatus.PENDING: "В ожидании",
@@ -88,6 +96,9 @@ class WithdrawalAdmin(ModelAdmin):
         if obj and obj.status != WithdrawalStatus.PENDING:
             return False
         return request.user.is_staff
+
+    def get_model_perms(self, request):
+        return {}
 
     @admin.action(description=_("Подтвердить выбранные заявки на вывод"))
     def action_approve(self, request, queryset):

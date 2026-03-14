@@ -1,12 +1,42 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
 
-from .models import Bonus, BonusStatus, CalculationType, MLMRule
+from .models import Bonus, BonusStatus, BonusType, CalculationType, MLMRule
 
 MLMRule._meta.verbose_name = "Правило начисления"
 MLMRule._meta.verbose_name_plural = "Правила начисления"
 Bonus._meta.verbose_name = "Начисление бонуса"
 Bonus._meta.verbose_name_plural = "Начисления бонусов"
+
+MLMRule._meta.get_field("agent_status").verbose_name = "Статус агента"
+MLMRule._meta.get_field("agent_status").choices = [
+    ("NEW", "Новый"),
+    ("BRONZE", "Бронза"),
+    ("SILVER", "Серебро"),
+    ("GOLD", "Золото"),
+]
+MLMRule._meta.get_field("calculation_type").verbose_name = "Тип расчета"
+MLMRule._meta.get_field("calculation_type").choices = [
+    (CalculationType.PERCENT, "Процент"),
+    (CalculationType.FIXED, "Фиксированная сумма"),
+]
+MLMRule._meta.get_field("is_active").verbose_name = "Активно"
+
+Bonus._meta.get_field("status").verbose_name = "Статус"
+Bonus._meta.get_field("status").choices = [
+    (BonusStatus.PENDING, "В ожидании"),
+    (BonusStatus.CONFIRMED, "Подтвержден"),
+]
+Bonus._meta.get_field("bonus_type").verbose_name = "Тип бонуса"
+Bonus._meta.get_field("bonus_type").choices = [
+    (BonusType.PERSONAL, "Личный"),
+    (BonusType.TEAM, "Командный"),
+]
+Bonus._meta.get_field("calculation_type_snapshot").verbose_name = "Тип расчета"
+Bonus._meta.get_field("calculation_type_snapshot").choices = [
+    (CalculationType.PERCENT, "Процент"),
+    (CalculationType.FIXED, "Фиксированная сумма"),
+]
 
 
 @admin.register(MLMRule)

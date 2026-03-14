@@ -45,6 +45,7 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "django_filters",
     "corsheaders",
+    "unfold.contrib.forms",
 ]
 
 LOCAL_APPS = [
@@ -91,11 +92,6 @@ UNFOLD = {
                         "icon": "group",
                         "link": reverse_lazy("admin:users_user_changelist"),
                     },
-                    {
-                        "title": _("История статусов"),
-                        "icon": "history",
-                        "link": reverse_lazy("admin:users_userstatushistory_changelist"),
-                    },
                 ],
             },
             {
@@ -132,16 +128,6 @@ UNFOLD = {
                         "title": _("Заказы"),
                         "icon": "shopping_cart",
                         "link": reverse_lazy("admin:orders_order_changelist"),
-                    },
-                    {
-                        "title": _("Позиции заказов"),
-                        "icon": "receipt_long",
-                        "link": reverse_lazy("admin:orders_orderitem_changelist"),
-                    },
-                    {
-                        "title": _("История статусов заказов"),
-                        "icon": "timeline",
-                        "link": reverse_lazy("admin:orders_orderlifecyclelog_changelist"),
                     },
                 ],
             },
@@ -185,27 +171,12 @@ UNFOLD = {
                         "icon": "workspace_premium",
                         "link": reverse_lazy("admin:mlm_statusthreshold_changelist"),
                     },
-                    {
-                        "title": _("Сводки по структуре"),
-                        "icon": "monitoring",
-                        "link": reverse_lazy("admin:mlm_networkstats_changelist"),
-                    },
-                    {
-                        "title": _("Заявки на вывод"),
-                        "icon": "account_balance_wallet",
-                        "link": reverse_lazy("admin:withdrawals_withdrawal_changelist"),
-                    },
                 ],
             },
             {
                 "title": _("Сервис"),
                 "separator": True,
                 "items": [
-                    {
-                        "title": _("Резервы товаров"),
-                        "icon": "event_available",
-                        "link": reverse_lazy("admin:reservations_reservation_changelist"),
-                    },
                     {
                         "title": _("Уведомления"),
                         "icon": "notifications",

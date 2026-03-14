@@ -29,23 +29,24 @@ class User(MPTTModel, AbstractBaseUser, PermissionsMixin):
         max_length=20,
         unique=True,
         db_index=True,
+        verbose_name="Телефон",
     )
-    first_name = models.CharField(max_length=150, verbose_name="First Name")
-    last_name = models.CharField(max_length=150, verbose_name="Last Name")
-    address = models.CharField(max_length=255, blank=True, default="", verbose_name="Address")
+    first_name = models.CharField(max_length=150, verbose_name="Имя")
+    last_name = models.CharField(max_length=150, verbose_name="Фамилия")
+    address = models.CharField(max_length=255, blank=True, default="", verbose_name="Адрес")
     is_active = models.BooleanField(
         default=True,
-        verbose_name="Active",
-        help_text="Designates whether this user should be treated as active.",
+        verbose_name="Активен",
+        help_text="Определяет, должен ли этот пользователь считаться активным.",
     )
     is_staff = models.BooleanField(
         default=False,
-        verbose_name="Staff Status",
-        help_text="Designates whether the user can log into this admin site.",
+        verbose_name="Статус персонала",
+        help_text="Определяет, может ли пользователь входить в панель администратора.",
     )
     date_joined = models.DateTimeField(
         default=timezone.now,
-        verbose_name="Date Joined",
+        verbose_name="Дата регистрации",
     )
 
     referral_code = models.CharField(
@@ -53,8 +54,8 @@ class User(MPTTModel, AbstractBaseUser, PermissionsMixin):
         unique=True,
         db_index=True,
         editable=False,
-        verbose_name="Referral Code",
-        help_text="Unique referral code for this agent",
+        verbose_name="Реферальный код",
+        help_text="Уникальный реферальный код агента",
     )
 
     parent = TreeForeignKey(
@@ -64,8 +65,8 @@ class User(MPTTModel, AbstractBaseUser, PermissionsMixin):
         blank=True,
         related_name="children",
         db_index=True,
-        verbose_name="Sponsor",
-        help_text="The agent who referred this user (MPTT parent node)",
+        verbose_name="Спонсор",
+        help_text="Агент, пригласивший пользователя (узел MPTT)",
     )
 
     status = models.CharField(
@@ -73,26 +74,26 @@ class User(MPTTModel, AbstractBaseUser, PermissionsMixin):
         choices=UserStatus.choices,
         default=UserStatus.NEW,
         db_index=True,
-        verbose_name="Status",
+        verbose_name="Статус",
     )
 
     personal_turnover = models.DecimalField(
         max_digits=14,
         decimal_places=2,
         default=Decimal("0.00"),
-        verbose_name="Personal Turnover",
+        verbose_name="Личный оборот",
     )
     team_turnover = models.DecimalField(
         max_digits=14,
         decimal_places=2,
         default=Decimal("0.00"),
-        verbose_name="Team Turnover",
+        verbose_name="Командный оборот",
     )
     bonus_balance = models.DecimalField(
         max_digits=14,
         decimal_places=2,
         default=Decimal("0.00"),
-        verbose_name="Bonus Balance",
+        verbose_name="Бонусный баланс",
     )
 
     objects = UserManager()
