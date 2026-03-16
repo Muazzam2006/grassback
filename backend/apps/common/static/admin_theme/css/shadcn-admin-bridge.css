@@ -195,3 +195,93 @@ a.deletelink {
   border-color: rgba(239, 95, 122, 0.3) !important;
   color: #ff9fb1 !important;
 }
+
+.grouped-attribute-picker {
+  display: grid;
+  gap: 10px;
+}
+
+.grouped-attribute-picker__controls {
+  display: grid !important;
+  gap: 8px !important;
+  grid-template-columns: minmax(220px, 320px) minmax(220px, 320px) auto !important;
+  align-items: center !important;
+  justify-content: start !important;
+}
+
+.grouped-attribute-picker__field {
+  min-width: 0 !important;
+  max-width: 320px;
+}
+
+.grouped-attribute-picker__native-select {
+  min-height: 38px;
+  width: 100%;
+}
+
+/* Ensure unfold select2 container follows our horizontal layout */
+.grouped-attribute-picker__field>.select2-container {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 320px;
+}
+
+/* Safety for cached old JS where selects are direct children */
+.grouped-attribute-picker__controls>.select2-hidden-accessible {
+  display: none !important;
+}
+
+.grouped-attribute-picker__selected {
+  display: grid;
+  gap: 8px;
+}
+
+.grouped-attribute-picker__controls>.grouped-attribute-picker__add {
+  justify-self: start;
+}
+
+.grouped-attribute-picker__add {
+  min-height: 38px !important;
+  padding: 0 12px !important;
+  white-space: nowrap;
+}
+
+.grouped-attribute-picker .button.default.grouped-attribute-picker__add,
+.grouped-attribute-picker .button.grouped-attribute-picker__add {
+  background: var(--ui-primary) !important;
+  border-color: var(--ui-primary) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.grouped-attribute-picker .button.default.grouped-attribute-picker__add:hover,
+.grouped-attribute-picker .button.grouped-attribute-picker__add:hover,
+.grouped-attribute-picker .button.default.grouped-attribute-picker__add:focus,
+.grouped-attribute-picker .button.grouped-attribute-picker__add:focus {
+  background: var(--ui-primary-hover) !important;
+  border-color: var(--ui-primary-hover) !important;
+  color: #ffffff !important;
+}
+
+.grouped-attribute-picker__add:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .grouped-attribute-picker__controls {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grouped-attribute-picker__field,
+  .grouped-attribute-picker__native-select,
+  .grouped-attribute-picker__field>.select2-container {
+    max-width: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .grouped-attribute-picker__controls {
+    grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto !important;
+  }
+}

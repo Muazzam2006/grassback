@@ -12,6 +12,7 @@ from .models import (
     ProductVariant,
     ProductVariantAttributeValue,
 )
+from .forms import ProductAdminForm, ProductVariantAdminForm
 from django.utils.html import format_html
 
 Brand._meta.verbose_name = "Бренд"
@@ -38,6 +39,7 @@ Product._meta.get_field("has_variants").verbose_name = "Есть вариант�
 Product._meta.get_field("currency").verbose_name = "Валюта"
 Product._meta.get_field("category").verbose_name = "Категория"
 Product._meta.get_field("brand").verbose_name = "Бренд"
+Product._meta.get_field("attribute_values").verbose_name = "Характеристики товара"
 
 ProductAttributeValue._meta.get_field("attribute").verbose_name = "Характеристика"
 
@@ -74,8 +76,16 @@ class ProductAttributeValueInline(TabularInline):
 
 class ProductVariantInline(StackedInline):
     model = ProductVariant
+    form = ProductVariantAdminForm
     extra = 0
-    fields = (("sku", "image_preview"), "image", "stock", ("price_override", "promo_price"), "is_active")
+    fields = (
+        ("sku", "image_preview"),
+        "image",
+        "stock",
+        ("price_override", "promo_price"),
+        "attribute_value_ids",
+        "is_active",
+    )
     readonly_fields = ("image_preview",)
 
     @admin.display(description="Предпросмотр")
@@ -104,18 +114,31 @@ class BrandAdmin(ModelAdmin):
     def created_at_display(self, obj: Brand):
         return obj.created_at
 
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == "description":
+            kwargs["widget"] = WysiwygWidget
+        return super().formfield_for_dbfield(db_field, **kwargs)
+
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(ModelAdmin):
     list_display = (
+        "image_preview",
         "name_display",
         "parent_display",
         "ordering_display",
         "is_active_display",
     )
+    readonly_fields = ("image_preview",)
     list_filter = ("is_active", "parent")
     search_fields = ("name", "slug")
     exclude = ("slug",)
+
+    @admin.display(description="Предпросмотр")
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img class="image-preview" src="{}" style="max-height: 50px; border-radius: 4px;" />', obj.image.url)
+        return "-"
 
     @admin.display(description="Название", ordering="name")
     def name_display(self, obj: ProductCategory):
@@ -136,8 +159,10 @@ class ProductCategoryAdmin(ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):
+    form = ProductAdminForm
+
     class Media:
-        js = ("js/product_admin.js",)
+        js = ("js/product_admin.js", "js/product_attributes_admin.js")
 
     list_display = (
         "name_display",
@@ -154,7 +179,7 @@ class ProductAdmin(ModelAdmin):
     list_filter = ("is_active", "is_visible", "has_variants", "category", "brand")
     search_fields = ("name", "slug")
     ordering = ("-created_at",)
-    exclude = ("slug", "currency")
+    exclude = ("slug", "currency", "attribute_values")
     autocomplete_fields = ["category", "brand"]
     inlines = [ProductImageInline, ProductVariantInline]
 
@@ -246,12 +271,17 @@ class ProductAttributeValueAdmin(ModelAdmin):
     def value_display(self, obj: ProductAttributeValue):
         return obj.value
 
-    def get_model_perms(self, request):
-        return {}
+    # def get_model_perms(self, request):
+    #     return {}
 
 
 @admin.register(ProductVariant)
 class ProductVariantAdmin(ModelAdmin):
+    form = ProductVariantAdminForm
+
+    class Media:
+        js = ("js/product_attributes_admin.js",)
+
     list_display = (
         "sku_display",
         "image_preview_list",
@@ -263,7 +293,22 @@ class ProductVariantAdmin(ModelAdmin):
     )
     list_filter = ("is_active", "product__category")
     search_fields = ("sku", "product__name")
-    inlines = [ProductVariantAttributeValueInline]
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "product",
+                    "sku",
+                    "image",
+                    "stock",
+                    ("price_override", "promo_price"),
+                    "attribute_value_ids",
+                    "is_active",
+                )
+            },
+        ),
+    )
 
     @admin.display(description="Изображение")
     def image_preview_list(self, obj: ProductVariant):

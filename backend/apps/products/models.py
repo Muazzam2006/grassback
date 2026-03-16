@@ -60,6 +60,7 @@ class ProductCategory(models.Model):
         "self", null=True, blank=True, on_delete=models.SET_NULL,
         related_name="subcategories", verbose_name=_("Родительская категория"),
     )
+    image = models.ImageField(upload_to="categories/", blank=True, null=True, verbose_name=_("Изображение"))
     is_active = models.BooleanField(default=True, db_index=True, verbose_name=_("Активна"))
     ordering = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создана"))
@@ -136,6 +137,13 @@ class Product(models.Model):
         default=False, db_index=True,
         verbose_name=_("Есть варианты"),
         help_text=_("Отметьте, если у товара есть варианты с разными артикулами (SKU)."),
+    )
+    attribute_values = models.ManyToManyField(
+        "ProductAttributeValue",
+        blank=True,
+        related_name="products",
+        verbose_name=_("Характеристики товара"),
+        help_text=_("Можно выбрать несколько характеристик для карточки товара."),
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создан"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлен"))
@@ -286,7 +294,6 @@ class ProductVariant(models.Model):
         verbose_name=_("Переопределение цены по акции"),
     )
     is_active = models.BooleanField(default=True, db_index=True, verbose_name=_("Активен"))
-
     attributes_hash = models.CharField(
         max_length=64,
         editable=False,

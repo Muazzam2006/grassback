@@ -3,7 +3,14 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Product, ProductAttribute, ProductAttributeValue, ProductCategory
+from .models import (
+    Product,
+    ProductAttribute,
+    ProductAttributeValue,
+    ProductCategory,
+    ProductImage,
+    ProductVariant,
+)
 
 User = get_user_model()
 
@@ -24,6 +31,11 @@ class ProductTypeApiTests(APITestCase):
         )
         self.client.force_authenticate(self.admin)
         self.category = ProductCategory.objects.create(name="Phones", ordering=1, is_active=True)
+        self.color_attribute = ProductAttribute.objects.create(name="Color")
+        self.size_attribute = ProductAttribute.objects.create(name="Size")
+        self.color_black = ProductAttributeValue.objects.create(attribute=self.color_attribute, value="Black")
+        self.color_white = ProductAttributeValue.objects.create(attribute=self.color_attribute, value="White")
+        self.size_m = ProductAttributeValue.objects.create(attribute=self.size_attribute, value="M")
 
     def test_create_simple_product_by_product_type(self):
         payload = {
@@ -56,6 +68,40 @@ class ProductTypeApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         product = Product.objects.get(pk=response.data["id"])
         self.assertTrue(product.has_variants)
+
+    def test_create_product_with_multiple_characteristics(self):
+        payload = {
+            "name": "Simple Product With Attributes",
+            "description": "Simple",
+            "price": "100.00",
+            "currency": "TJS",
+            "category": str(self.category.id),
+            "product_type": "SIMPLE",
+            "attribute_value_ids": [str(self.color_black.id), str(self.size_m.id)],
+        }
+
+        response = self.client.post(reverse("products-list"), payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        product = Product.objects.get(pk=response.data["id"])
+        selected_ids = set(product.attribute_values.values_list("id", flat=True))
+        self.assertEqual(selected_ids, {self.color_black.id, self.size_m.id})
+
+    def test_create_product_rejects_two_values_from_same_attribute(self):
+        payload = {
+            "name": "Simple Product Invalid Attributes",
+            "description": "Simple",
+            "price": "100.00",
+            "currency": "TJS",
+            "category": str(self.category.id),
+            "product_type": "SIMPLE",
+            "attribute_value_ids": [str(self.color_black.id), str(self.color_white.id)],
+        }
+
+        response = self.client.post(reverse("products-list"), payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("attribute_value_ids", response.data)
 
 
 class NestedProductsApiTests(APITestCase):
@@ -109,6 +155,31 @@ class NestedProductsApiTests(APITestCase):
         )
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertGreaterEqual(len(_items(list_response.data)), 2)
+
+    def test_categories_list_contains_image_url_field(self):
+        response = self.client.get(reverse("categories-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        categories = _items(response.data)
+        target = next(item for item in categories if item["id"] == str(self.category.id))
+        self.assertIn("image_url", target)
+        self.assertIsNone(target["image_url"])
+
+    def test_categories_list_returns_uploaded_image_url(self):
+        category_with_image = ProductCategory.objects.create(
+            name="With Image",
+            ordering=2,
+            is_active=True,
+            image="categories/with-image.png",
+        )
+
+        response = self.client.get(reverse("categories-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        categories = _items(response.data)
+        target = next(item for item in categories if item["id"] == str(category_with_image.id))
+        self.assertTrue(target["image_url"])
+        self.assertTrue(target["image_url"].endswith("/media/categories/with-image.png"))
 
     def test_product_variants_nested_endpoints(self):
         self.client.force_authenticate(self.admin)
@@ -260,3 +331,59 @@ class NestedProductsApiTests(APITestCase):
         )
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(_items(list_response.data)), 1)
+
+    def test_product_detail_returns_selected_characteristics(self):
+        size_attribute = ProductAttribute.objects.create(name="Size")
+        size_value = ProductAttributeValue.objects.create(attribute=size_attribute, value="15-inch")
+        self.product.attribute_values.add(self.attribute_value, size_value)
+
+        response = self.client.get(reverse("products-detail", kwargs={"slug": self.product.slug}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        attributes = response.data.get("attribute_values", [])
+        labels = {(item["attribute"], item["value"]) for item in attributes}
+        self.assertIn(("Color", "Black"), labels)
+        self.assertIn(("Size", "15-inch"), labels)
+
+    def test_products_list_returns_variant_image_and_primary_image_fallback(self):
+        ProductVariant.objects.create(
+            product=self.product,
+            sku="LAPTOP-IMG-001",
+            stock=4,
+            price_override="1190.00",
+            is_active=True,
+            attributes_hash="",
+            image="products/variants/laptop-black.png",
+        )
+
+        response = self.client.get(reverse("products-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        products = _items(response.data)
+        target = next(item for item in products if item["id"] == str(self.product.id))
+
+        self.assertTrue(target["primary_image"])
+        self.assertTrue(target["primary_image"].endswith("/media/products/variants/laptop-black.png"))
+        self.assertGreaterEqual(len(target["variants"]), 1)
+        first_variant = target["variants"][0]
+        self.assertIn("image_url", first_variant)
+        self.assertTrue(first_variant["image_url"])
+        self.assertTrue(first_variant["image_url"].endswith("/media/products/variants/laptop-black.png"))
+
+    def test_product_detail_images_use_uploaded_file_url(self):
+        ProductImage.objects.create(
+            product=self.product,
+            image="products/images/laptop-main.png",
+            alt_text="main",
+            is_primary=True,
+            ordering=1,
+        )
+
+        response = self.client.get(reverse("products-detail", kwargs={"slug": self.product.slug}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["images"]), 1)
+        image_url = response.data["images"][0]["image_url"]
+        self.assertTrue(image_url)
+        self.assertTrue(image_url.endswith("/media/products/images/laptop-main.png"))
+        self.assertTrue(response.data["primary_image"].endswith("/media/products/images/laptop-main.png"))

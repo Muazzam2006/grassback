@@ -141,7 +141,7 @@
     .vTextField,
     .vLargeTextField,
     .vSelectMultipleField {
-        @apply bg-background text-foreground border-border bg-none !important;
+        @apply bg-background text-foreground border border-border rounded-md px-3 py-2 !important;
     }
 
     /* Fix Unfold descriptive text / help text under inputs */
@@ -164,14 +164,37 @@
         @apply px-4 py-2 rounded-md transition-colors shadow-sm font-medium !important;
     }
 
-    /* Remove the gray background from image preview readonly fields */
-    div:has(> .image-preview) {
+    /* Remove the gray background from image preview readonly fields in Unfold */
+    .field-image_preview>div,
+    .field-image_preview>div>div {
         background-color: transparent !important;
         border: none !important;
         padding-top: 0 !important;
         padding-bottom: 0 !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
+    }
+
+    /* Prevent image_preview from taking 50% width when side-by-side with SKU */
+    .form-row .field-image_preview {
+        flex: 0 0 auto !important;
         width: max-content !important;
     }
+
+    /* Narrow input fields in Product Variant form */
+    .field-sku,
+    .field-image,
+    .field-stock,
+    .field-price_override,
+    .field-promo_price {
+        max-width: 30px !important;
+        flex: 1 1 30px !important;
+    }
+
+    select[multiple] {
+        min-height: 120px;
+    }
+
+    
+
 }

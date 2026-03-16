@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from unfold.admin import ModelAdmin, TabularInline, StackedInline
 
 from .models import Order, OrderItem, OrderLifecycleLog, OrderStatus
@@ -8,6 +8,7 @@ from .services import (
     confirm_order,
     deliver_order,
     ship_order,
+    transition_order_status,
 )
 
 Order._meta.verbose_name = "Заказ"
@@ -28,6 +29,7 @@ _ORDER_STATUS_CHOICES_RU = [
 
 Order._meta.get_field("status").verbose_name = "Статус"
 Order._meta.get_field("status").choices = _ORDER_STATUS_CHOICES_RU
+Order._meta.get_field("delivery_fee").verbose_name = "Стоимость доставки"
 Order._meta.get_field("currency").verbose_name = "Валюта"
 Order._meta.get_field("created_at").verbose_name = "Создан"
 
@@ -72,7 +74,14 @@ class OrderItemInline(TabularInline):
 
     @admin.display(description="Источник резерва", ordering="reservation")
     def reservation_display(self, obj: OrderItem):
-        return obj.reservation
+        reservation = obj.reservation
+        if reservation is None:
+            return "—"
+
+        status_choices = dict(reservation._meta.get_field("status").choices)
+        status_label = status_choices.get(reservation.status, reservation.status)
+        variant_sku = reservation.variant.sku if reservation.variant_id else "—"
+        return f"Резерв {str(reservation.id)[:8]} · {variant_sku} · {reservation.quantity} шт. · {status_label}"
 
     @admin.display(description="Название товара", ordering="product_name_snapshot")
     def product_name_snapshot_display(self, obj: OrderItem):
@@ -141,8 +150,8 @@ class OrderAdmin(ModelAdmin):
     search_fields = ("id", "user__phone", "user__first_name", "user__last_name")
     ordering = ("-created_at",)
     readonly_fields = (
-        "user", "status",
-        "total_amount", "delivery_fee", "grand_total_display",
+        "user",
+        "total_amount", "grand_total_display",
         "currency", "delivery_address",
     )
     list_select_related = ("user", "delivery_address")
@@ -180,6 +189,59 @@ class OrderAdmin(ModelAdmin):
     def created_at_display(self, obj: Order):
         return obj.created_at
 
+    def save_model(self, request, obj, form, change):
+        if not change:
+            super().save_model(request, obj, form, change)
+            return
+
+        current = Order.objects.get(pk=obj.pk)
+        new_status = form.cleaned_data.get("status", current.status)
+        new_delivery_fee = form.cleaned_data.get("delivery_fee", current.delivery_fee)
+
+        updated_order = current
+
+        if new_status != current.status:
+            try:
+                if new_status == OrderStatus.CANCELLED:
+                    updated_order = cancel_order(
+                        current,
+                        changed_by=request.user,
+                        note="Отменено администратором в карточке заказа.",
+                    )
+                else:
+                    updated_order = transition_order_status(
+                        current,
+                        new_status,
+                        changed_by=request.user,
+                        note="Статус изменен администратором в карточке заказа.",
+                    )
+                self.message_user(request, "Статус заказа обновлен.", level=messages.SUCCESS)
+            except OrderTransitionError as exc:
+                if new_status == OrderStatus.CANCELLED:
+                    self.message_user(request, f"Статус не изменен: {exc}", level=messages.ERROR)
+                else:
+                    old_status = current.status
+                    current.status = new_status
+                    current.save(update_fields=["status", "updated_at"])
+                    OrderLifecycleLog.objects.create(
+                        order=current,
+                        from_status=old_status,
+                        to_status=new_status,
+                        changed_by=request.user,
+                        note="Статус изменен администратором вручную.",
+                    )
+                    updated_order = current
+                    self.message_user(
+                        request,
+                        "Статус обновлен вручную (вне стандартного перехода).",
+                        level=messages.WARNING,
+                    )
+
+        if new_delivery_fee != updated_order.delivery_fee:
+            updated_order.delivery_fee = new_delivery_fee
+            updated_order.save(update_fields=["delivery_fee", "updated_at"])
+            self.message_user(request, "Стоимость доставки обновлена.", level=messages.SUCCESS)
+
     def has_add_permission(self, request) -> bool:
         return False
 
@@ -189,8 +251,6 @@ class OrderAdmin(ModelAdmin):
         return super().has_delete_permission(request, obj)
 
     def has_change_permission(self, request, obj=None) -> bool:
-        if obj and obj.status in (OrderStatus.DELIVERED, OrderStatus.CANCELLED):
-            return False
         return super().has_change_permission(request, obj)
                                  
 

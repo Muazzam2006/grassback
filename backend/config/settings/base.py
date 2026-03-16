@@ -84,13 +84,13 @@ UNFOLD = {
                 ],
             },
             {
-                "title": _("Пользователи"),
+                "title": _("Продажи"),
                 "separator": True,
                 "items": [
                     {
-                        "title": _("Клиенты"),
-                        "icon": "group",
-                        "link": reverse_lazy("admin:users_user_changelist"),
+                        "title": _("Заказы"),
+                        "icon": "shopping_cart",
+                        "link": reverse_lazy("admin:orders_order_changelist"),
                     },
                 ],
             },
@@ -121,39 +121,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": _("Продажи"),
-                "separator": True,
-                "items": [
-                    {
-                        "title": _("Заказы"),
-                        "icon": "shopping_cart",
-                        "link": reverse_lazy("admin:orders_order_changelist"),
-                    },
-                ],
-            },
-            {
-                "title": _("Логистика"),
-                "separator": True,
-                "items": [
-                    {
-                        "title": _("Адреса получателей"),
-                        "icon": "home_pin",
-                        "link": reverse_lazy("admin:delivery_deliveryaddress_changelist"),
-                    },
-                    {
-                        "title": _("Отгрузки заказов"),
-                        "icon": "local_shipping",
-                        "link": reverse_lazy("admin:delivery_orderdelivery_changelist"),
-                    },
-                    {
-                        "title": _("Курьеры"),
-                        "icon": "delivery_dining",
-                        "link": reverse_lazy("admin:delivery_courier_changelist"),
-                    },
-                ],
-            },
-            {
-                "title": _("Финансы и MLM"),
+                "title": _("Финансы"),
                 "separator": True,
                 "items": [
                     {
@@ -174,13 +142,24 @@ UNFOLD = {
                 ],
             },
             {
-                "title": _("Сервис"),
+                "title": _("Уведомления"),
                 "separator": True,
                 "items": [
                     {
                         "title": _("Уведомления"),
                         "icon": "notifications",
                         "link": reverse_lazy("admin:notifications_notification_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Пользователи"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Клиенты"),
+                        "icon": "group",
+                        "link": reverse_lazy("admin:users_user_changelist"),
                     },
                 ],
             },

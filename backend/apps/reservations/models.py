@@ -77,12 +77,21 @@ class Reservation(models.Model):
         ]
 
     def __str__(self) -> str:
+        status_map = {
+            ReservationStatus.ACTIVE: "Активен",
+            ReservationStatus.EXPIRED: "Истек",
+            ReservationStatus.CONVERTED: "Преобразован в заказ",
+            ReservationStatus.CANCELLED: "Отменен",
+        }
+        status_label = status_map.get(self.status, self.status)
+        user_phone = getattr(self.user, "phone", self.user_id)
+        variant_sku = getattr(self.variant, "sku", self.variant_id)
         return (
-            f"Reservation({self.id!s:.8}, "
-            f"user={self.user_id}, "
-            f"variant={self.variant_id}, "
-            f"qty={self.quantity}, "
-            f"{self.status})"
+            f"Резерв {str(self.id)[:8]} "
+            f"(пользователь: {user_phone}, "
+            f"вариант: {variant_sku}, "
+            f"кол-во: {self.quantity}, "
+            f"статус: {status_label})"
         )
 
     @property

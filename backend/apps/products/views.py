@@ -140,6 +140,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         qs = Product.objects.select_related("category", "brand").prefetch_related(
             Prefetch("variants", queryset=variant_qs),
             "images",
+            "attribute_values__attribute",
         )
         if self.request.user.is_staff:
             return qs
