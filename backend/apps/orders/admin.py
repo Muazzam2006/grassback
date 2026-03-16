@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from unfold.admin import ModelAdmin, TabularInline, StackedInline
+from unfold.admin import ModelAdmin, TabularInline
 
 from .models import Order, OrderItem, OrderLifecycleLog, OrderStatus
 from .services import (
@@ -11,33 +11,6 @@ from .services import (
     transition_order_status,
 )
 
-Order._meta.verbose_name = "Заказ"
-Order._meta.verbose_name_plural = "Заказы"
-OrderItem._meta.verbose_name = "Позиция заказа"
-OrderItem._meta.verbose_name_plural = "Позиции заказа"
-OrderLifecycleLog._meta.verbose_name = "История заказа"
-OrderLifecycleLog._meta.verbose_name_plural = "История заказов"
-
-_ORDER_STATUS_CHOICES_RU = [
-    (OrderStatus.CREATED, "Создан"),
-    (OrderStatus.RESERVED, "Забронирован"),
-    (OrderStatus.CONFIRMED, "Подтвержден"),
-    (OrderStatus.SHIPPED, "Отправлен"),
-    (OrderStatus.DELIVERED, "Доставлен"),
-    (OrderStatus.CANCELLED, "Отменен"),
-]
-
-Order._meta.get_field("status").verbose_name = "Статус"
-Order._meta.get_field("status").choices = _ORDER_STATUS_CHOICES_RU
-Order._meta.get_field("delivery_fee").verbose_name = "Стоимость доставки"
-Order._meta.get_field("currency").verbose_name = "Валюта"
-Order._meta.get_field("created_at").verbose_name = "Создан"
-
-OrderLifecycleLog._meta.get_field("from_status").verbose_name = "Статус до"
-OrderLifecycleLog._meta.get_field("to_status").verbose_name = "Статус после"
-OrderLifecycleLog._meta.get_field("from_status").choices = _ORDER_STATUS_CHOICES_RU
-OrderLifecycleLog._meta.get_field("to_status").choices = _ORDER_STATUS_CHOICES_RU
-
 
 ORDER_STATUS_LABELS = {
     OrderStatus.CREATED: "Создан",
@@ -47,6 +20,47 @@ ORDER_STATUS_LABELS = {
     OrderStatus.DELIVERED: "Доставлен",
     OrderStatus.CANCELLED: "Отменен",
 }
+
+
+RESERVATION_STATUS_LABELS = {
+    "ACTIVE": "Активна",
+    "EXPIRED": "Истекла",
+    "CONVERTED": "Оформлена в заказ",
+    "CANCELLED": "Отменена",
+}
+
+
+def _to_numeric_reference(value) -> str:
+    if not value:
+        return "—"
+
+    hex_prefix = str(value).split("-")[0]
+    try:
+        return f"{int(hex_prefix, 16):010d}"
+    except (TypeError, ValueError):
+        return str(value)
+
+
+Order._meta.verbose_name = "Заказ"
+Order._meta.verbose_name_plural = "Заказы"
+Order._meta.get_field("user").verbose_name = "Пользователь"
+Order._meta.get_field("status").verbose_name = "Статус"
+Order._meta.get_field("status").choices = list(ORDER_STATUS_LABELS.items())
+Order._meta.get_field("total_amount").verbose_name = "Сумма товаров"
+Order._meta.get_field("delivery_fee").verbose_name = "Стоимость доставки"
+Order._meta.get_field("currency").verbose_name = "Валюта"
+Order._meta.get_field("created_at").verbose_name = "Создан"
+Order._meta.get_field("updated_at").verbose_name = "Обновлен"
+
+OrderItem._meta.verbose_name = "Позиция заказа"
+OrderItem._meta.verbose_name_plural = "Позиции заказа"
+
+OrderLifecycleLog._meta.verbose_name = "История изменения статусов"
+OrderLifecycleLog._meta.verbose_name_plural = "История изменения статусов"
+OrderLifecycleLog._meta.get_field("from_status").verbose_name = "Статус до"
+OrderLifecycleLog._meta.get_field("to_status").verbose_name = "Статус после"
+OrderLifecycleLog._meta.get_field("from_status").choices = list(ORDER_STATUS_LABELS.items())
+OrderLifecycleLog._meta.get_field("to_status").choices = list(ORDER_STATUS_LABELS.items())
 
 
 class OrderItemInline(TabularInline):
@@ -64,6 +78,9 @@ class OrderItemInline(TabularInline):
     fields = readonly_fields
     can_delete = False
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
     @admin.display(description="Товар", ordering="product__name")
     def product_display(self, obj: OrderItem):
         return obj.product
@@ -72,16 +89,20 @@ class OrderItemInline(TabularInline):
     def variant_display(self, obj: OrderItem):
         return obj.variant
 
-    @admin.display(description="Источник резерва", ordering="reservation")
+    @admin.display(description="Связанная бронь", ordering="reservation")
     def reservation_display(self, obj: OrderItem):
         reservation = obj.reservation
         if reservation is None:
-            return "—"
+            return "Без брони"
 
-        status_choices = dict(reservation._meta.get_field("status").choices)
-        status_label = status_choices.get(reservation.status, reservation.status)
-        variant_sku = reservation.variant.sku if reservation.variant_id else "—"
-        return f"Резерв {str(reservation.id)[:8]} · {variant_sku} · {reservation.quantity} шт. · {status_label}"
+        status_label = RESERVATION_STATUS_LABELS.get(reservation.status, reservation.status)
+        variant_sku = reservation.variant.sku if reservation.variant_id else "без артикула"
+        reservation_number = _to_numeric_reference(reservation.id)
+
+        return (
+            f"Бронь №{reservation_number}: артикул {variant_sku}, "
+            f"статус — {status_label}"
+        )
 
     @admin.display(description="Название товара", ordering="product_name_snapshot")
     def product_name_snapshot_display(self, obj: OrderItem):
@@ -113,6 +134,9 @@ class OrderLifecycleLogInline(TabularInline):
     can_delete = False
     ordering = ("created_at",)
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
     @admin.display(description="Статус до", ordering="from_status")
     def from_status_display(self, obj: OrderLifecycleLog):
         return ORDER_STATUS_LABELS.get(obj.from_status, obj.from_status or "-")
@@ -137,6 +161,7 @@ class OrderLifecycleLogInline(TabularInline):
 @admin.register(Order)
 class OrderAdmin(ModelAdmin):
     list_display = (
+        "order_number_display",
         "user_display",
         "status_display",
         "total_amount_display",
@@ -150,12 +175,17 @@ class OrderAdmin(ModelAdmin):
     search_fields = ("id", "user__phone", "user__first_name", "user__last_name")
     ordering = ("-created_at",)
     readonly_fields = (
+        "order_number_display",
         "user",
         "total_amount", "grand_total_display",
         "currency", "delivery_address",
     )
     list_select_related = ("user", "delivery_address")
     inlines = [OrderItemInline, OrderLifecycleLogInline]
+
+    @admin.display(description="Номер заказа", ordering="id")
+    def order_number_display(self, obj: Order):
+        return obj.order_number_numeric
 
     @admin.display(description="Итого")
     def grand_total_display(self, obj: Order):

@@ -8,12 +8,12 @@ from django.utils.translation import gettext_lazy as _
 
 
 class OrderStatus(models.TextChoices):
-    CREATED = "CREATED", _("Created")                                                
-    RESERVED = "RESERVED", _("Reserved")                                                    
-    CONFIRMED = "CONFIRMED", _("Confirmed")                                       
-    SHIPPED = "SHIPPED", _("Shipped")                                
-    DELIVERED = "DELIVERED", _("Delivered")                                            
-    CANCELLED = "CANCELLED", _("Cancelled")                                             
+    CREATED = "CREATED", _("Создан")
+    RESERVED = "RESERVED", _("Забронирован")
+    CONFIRMED = "CONFIRMED", _("Подтвержден")
+    SHIPPED = "SHIPPED", _("Отправлен")
+    DELIVERED = "DELIVERED", _("Доставлен")
+    CANCELLED = "CANCELLED", _("Отменен")
 
 
 class Order(models.Model):
@@ -33,20 +33,20 @@ class Order(models.Model):
         "delivery.DeliveryAddress",
         on_delete=models.PROTECT,
         related_name="orders",
-        verbose_name=_("Delivery Address"),
-        help_text=_("Mandatory — where COD goods will be delivered."),
+        verbose_name=_("Адрес доставки"),
+        help_text=_("Обязательно — адрес, куда доставляется заказ при оплате при получении."),
     )
     total_amount = models.DecimalField(
         max_digits=14,
         decimal_places=2,
         default=Decimal("0.00"),
-        help_text=_("Items subtotal (quantity × effective price for each line)."),
+        help_text=_("Сумма позиций заказа (количество × цена каждой позиции)."),
     )
     delivery_fee = models.DecimalField(
         max_digits=14,
         decimal_places=2,
         default=Decimal("0.00"),
-        help_text=_("Snapshot of delivery fee at time of checkout."),
+        help_text=_("Снимок стоимости доставки на момент оформления заказа."),
     )
     currency = models.CharField(max_length=3, default="TJS")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -74,6 +74,15 @@ class Order(models.Model):
         """Payment total: items subtotal + delivery fee."""
         return self.total_amount + self.delivery_fee
 
+    @property
+    def order_number(self) -> str:
+        return f"ORD-{str(self.id).split('-')[0].upper()}"
+
+    @property
+    def order_number_numeric(self) -> str:
+        raw_id = str(self.id).replace("-", "")
+        return f"{int(raw_id[:8], 16):010d}"
+
     def __str__(self):
         status_map = {
             OrderStatus.CREATED: "Создан",
@@ -85,7 +94,7 @@ class Order(models.Model):
         }
         phone = getattr(self.user, "phone", "—")
         status_label = status_map.get(self.status, self.status)
-        return f"Заказ {self.created_at:%d.%m.%Y %H:%M} ({phone}, {status_label})"
+        return f"Заказ №{self.order_number_numeric} ({phone}, {status_label})"
 
 
 class OrderItem(models.Model):
@@ -155,8 +164,7 @@ class OrderItem(models.Model):
         ]
 
     def __str__(self):
-        sku = f" SKU={self.variant.sku}" if self.variant_id else ""
-        return f"{self.quantity}× {self.product_name_snapshot}{sku} in {self.order_id}"
+        return f"Позиция заказа {str(self.id)[:8]}"
 
 
 class OrderLifecycleLog(models.Model):

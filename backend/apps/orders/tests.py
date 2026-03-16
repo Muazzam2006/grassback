@@ -126,6 +126,20 @@ class EndpointsSmokeTests(APITestCase):
         admin_users_response = self.client.get(reverse("users-list"))
         self.assertEqual(admin_users_response.status_code, status.HTTP_200_OK)
 
+    def test_orders_endpoints_return_order_number(self):
+        self.client.force_authenticate(self.admin)
+
+        list_response = self.client.get(reverse("orders-list"))
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        first_item = _items(list_response.data)[0]
+        self.assertIn("order_number", first_item)
+        self.assertTrue(first_item["order_number"].startswith("ORD-"))
+
+        detail_response = self.client.get(reverse("orders-detail", kwargs={"id": self.order.id}))
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertIn("order_number", detail_response.data)
+        self.assertTrue(detail_response.data["order_number"].startswith("ORD-"))
+
     def test_order_lifecycle_endpoints_work_for_admin(self):
         self.client.force_authenticate(self.admin)
 

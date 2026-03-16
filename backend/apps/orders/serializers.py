@@ -33,6 +33,7 @@ class OrderLifecycleLogSerializer(serializers.ModelSerializer):
 
 
 class OrderListSerializer(serializers.ModelSerializer):
+    order_number = serializers.CharField(read_only=True)
     grand_total = serializers.DecimalField(
         max_digits=14, decimal_places=2, read_only=True
     )
@@ -40,7 +41,7 @@ class OrderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            "id", "status",
+            "id", "order_number", "status",
             "total_amount", "delivery_fee", "grand_total",
             "currency", "delivery_address", "created_at",
         ]
@@ -48,6 +49,7 @@ class OrderListSerializer(serializers.ModelSerializer):
 
 
 class OrderDetailSerializer(serializers.ModelSerializer):
+    order_number = serializers.CharField(read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)
     user = serializers.StringRelatedField()
     grand_total = serializers.DecimalField(
@@ -60,7 +62,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            "id", "user", "status",
+            "id", "order_number", "user", "status",
             "items",
             "total_amount", "delivery_fee", "grand_total",
             "currency", "delivery_address",

@@ -16,22 +16,28 @@ class Notification(models.Model):
         "users.User",
         on_delete=models.CASCADE,
         related_name="notifications",
-        verbose_name="Recipient",
+        verbose_name="Пользователь",
+        null=True,
+        blank=True,
+        help_text="Оставьте пустым, чтобы отправить всем пользователям.",
     )
-    channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES, default=CHANNEL_IN_APP)
-    title = models.CharField(max_length=255)
-    body = models.TextField()
-    is_read = models.BooleanField(default=False, db_index=True)
-    sent_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES, default=CHANNEL_PUSH)
+    title = models.CharField(max_length=255, verbose_name="Заголовок")
+    body = models.TextField(verbose_name="Сообщение")
+    play_sound = models.BooleanField(default=True, verbose_name="Звук")
+    vibrate = models.BooleanField(default=True, verbose_name="Вибрация")
+    is_read = models.BooleanField(default=False, db_index=True, verbose_name="Прочитано")
+    sent_at = models.DateTimeField(null=True, blank=True, verbose_name="Отправлено")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Создано")
 
     class Meta:
         ordering = ["-created_at"]
-        verbose_name = "Notification"
-        verbose_name_plural = "Notifications"
+        verbose_name = "Push-уведомление"
+        verbose_name_plural = "Push-уведомления"
         indexes = [
             models.Index(fields=["user", "is_read"], name="notif_user_unread_idx"),
         ]
 
     def __str__(self) -> str:
-        return f"[{self.channel}] {self.title} → {self.user.phone}"
+        recipient = self.user.phone if self.user_id else "Все пользователи"
+        return f"[{self.channel}] {self.title} -> {recipient}"
