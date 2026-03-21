@@ -15,13 +15,24 @@ MLMRule._meta.get_field("agent_status").choices = [
     ("SILVER", "Серебро"),
     ("GOLD", "Золото"),
 ]
+MLMRule._meta.get_field("level").verbose_name = "Уровень"
 MLMRule._meta.get_field("calculation_type").verbose_name = "Тип расчета"
 MLMRule._meta.get_field("calculation_type").choices = [
     (CalculationType.PERCENT, "Процент"),
     (CalculationType.FIXED, "Фиксированная сумма"),
 ]
+MLMRule._meta.get_field("calculation_type").help_text = (
+    "Процент: значение в % от суммы заказа. Фиксированная сумма: сумма за заказ."
+)
+MLMRule._meta.get_field("value").verbose_name = "Значение"
+MLMRule._meta.get_field("value").help_text = ""
 MLMRule._meta.get_field("is_active").verbose_name = "Активно"
+MLMRule._meta.get_field("created_at").verbose_name = "Создано"
 
+Bonus._meta.get_field("user").verbose_name = "Пользователь"
+Bonus._meta.get_field("source_user").verbose_name = "Источник"
+Bonus._meta.get_field("order").verbose_name = "Заказ"
+Bonus._meta.get_field("level").verbose_name = "Уровень"
 Bonus._meta.get_field("status").verbose_name = "Статус"
 Bonus._meta.get_field("status").choices = [
     (BonusStatus.PENDING, "В ожидании"),
@@ -37,6 +48,12 @@ Bonus._meta.get_field("calculation_type_snapshot").choices = [
     (CalculationType.PERCENT, "Процент"),
     (CalculationType.FIXED, "Фиксированная сумма"),
 ]
+Bonus._meta.get_field("percent_snapshot").verbose_name = "Устаревшее значение (%)"
+Bonus._meta.get_field("percent_snapshot").help_text = ""
+Bonus._meta.get_field("applied_value_snapshot").verbose_name = "Примененное значение"
+Bonus._meta.get_field("applied_value_snapshot").help_text = ""
+Bonus._meta.get_field("amount").verbose_name = "Сумма"
+Bonus._meta.get_field("created_at").verbose_name = "Создан"
 
 
 @admin.register(MLMRule)

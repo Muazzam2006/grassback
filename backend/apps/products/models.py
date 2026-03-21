@@ -25,6 +25,7 @@ class Brand(models.Model):
     name = models.CharField(max_length=100, unique=True, db_index=True, verbose_name=_("Название"))
     slug = models.SlugField(max_length=120, unique=True, verbose_name=_("ЧПУ (Slug)"))
     description = models.TextField(blank=True, verbose_name=_("Описание"))
+    image = models.ImageField(upload_to="brands/", blank=True, null=True, verbose_name=_("Изображение"))
     is_active = models.BooleanField(default=True, db_index=True, verbose_name=_("Активен"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создан"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлен"))

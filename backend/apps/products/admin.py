@@ -21,8 +21,8 @@ ProductCategory._meta.verbose_name = "Категория товара"
 ProductCategory._meta.verbose_name_plural = "Категории товаров"
 Product._meta.verbose_name = "Товар"
 Product._meta.verbose_name_plural = "Товары"
-ProductAttribute._meta.verbose_name = "Характеристика товара"
-ProductAttribute._meta.verbose_name_plural = "Характеристики товара"
+ProductAttribute._meta.verbose_name = "Параметр"
+ProductAttribute._meta.verbose_name_plural = "Параметры"
 ProductAttributeValue._meta.verbose_name = "Значение характеристики"
 ProductAttributeValue._meta.verbose_name_plural = "Значения характеристик"
 ProductVariant._meta.verbose_name = "Вариант товара"
@@ -33,8 +33,8 @@ Brand._meta.get_field("is_active").verbose_name = "Активен"
 ProductCategory._meta.get_field("is_active").verbose_name = "Активна"
 ProductCategory._meta.get_field("parent").verbose_name = "Родительская категория"
 
-Product._meta.get_field("is_active").verbose_name = "Активен"
-Product._meta.get_field("is_visible").verbose_name = "Показывать"
+Product._meta.get_field("is_active").verbose_name = "Доступен к продаже"
+Product._meta.get_field("is_visible").verbose_name = "Показывать в каталоге"
 Product._meta.get_field("has_variants").verbose_name = "Есть варианты"
 Product._meta.get_field("currency").verbose_name = "Валюта"
 Product._meta.get_field("category").verbose_name = "Категория"
@@ -97,10 +97,33 @@ class ProductVariantInline(StackedInline):
 
 @admin.register(Brand)
 class BrandAdmin(ModelAdmin):
-    list_display = ("name_display", "is_active_display", "created_at_display")
+    list_display = ("image_preview", "name_display", "is_active_display", "created_at_display")
     list_filter = ("is_active",)
     search_fields = ("name", "slug")
+    readonly_fields = ("image_preview",)
     exclude = ("slug",)
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    ("name", "image_preview"),
+                    "image",
+                    "description",
+                    "is_active",
+                )
+            },
+        ),
+    )
+
+    @admin.display(description="Предпросмотр")
+    def image_preview(self, obj: Brand):
+        if obj.image:
+            return format_html(
+                '<img class="image-preview" src="{}" style="max-width: 80px; max-height: 80px; border-radius: 6px; object-fit: cover;" />',
+                obj.image.url,
+            )
+        return "-"
 
     @admin.display(description="Название", ordering="name")
     def name_display(self, obj: Brand):
@@ -155,6 +178,11 @@ class ProductCategoryAdmin(ModelAdmin):
     @admin.display(boolean=True, description="Активна", ordering="is_active")
     def is_active_display(self, obj: ProductCategory):
         return obj.is_active
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "parent":
+            kwargs.setdefault("empty_label", "Выберите значение")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(Product)
@@ -229,11 +257,11 @@ class ProductAdmin(ModelAdmin):
     def stock_display(self, obj: Product):
         return obj.stock
 
-    @admin.display(boolean=True, description="Активен", ordering="is_active")
+    @admin.display(boolean=True, description="Доступен к продаже", ordering="is_active")
     def is_active_display(self, obj: Product):
         return obj.is_active
 
-    @admin.display(boolean=True, description="Показывать", ordering="is_visible")
+    @admin.display(boolean=True, description="Показывать в каталоге", ordering="is_visible")
     def is_visible_display(self, obj: Product):
         return obj.is_visible
 

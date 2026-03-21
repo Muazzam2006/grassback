@@ -103,6 +103,10 @@ class BrandInlineSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     name = serializers.CharField(read_only=True)
     slug = serializers.SlugField(read_only=True)
+    image_url = serializers.SerializerMethodField()
+
+    def get_image_url(self, obj):
+        return _resolve_media_or_external_url(self.context.get("request"), obj.image, None)
 
 
 class ProductVariantInlineSerializer(serializers.ModelSerializer):
@@ -409,6 +413,8 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class BrandSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Brand
         fields = [
@@ -416,11 +422,16 @@ class BrandSerializer(serializers.ModelSerializer):
             "name",
             "slug",
             "description",
+            "image",
+            "image_url",
             "is_active",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "slug", "created_at", "updated_at"]
+        read_only_fields = ["id", "slug", "image_url", "created_at", "updated_at"]
+
+    def get_image_url(self, obj):
+        return _resolve_media_or_external_url(self.context.get("request"), obj.image, None)
 
 
 class ProductAttributeValueInlineSerializer(serializers.ModelSerializer):

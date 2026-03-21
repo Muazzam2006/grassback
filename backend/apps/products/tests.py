@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from .models import (
+    Brand,
     Product,
     ProductAttribute,
     ProductAttributeValue,
@@ -180,6 +181,32 @@ class NestedProductsApiTests(APITestCase):
         target = next(item for item in categories if item["id"] == str(category_with_image.id))
         self.assertTrue(target["image_url"])
         self.assertTrue(target["image_url"].endswith("/media/categories/with-image.png"))
+
+    def test_brands_list_contains_image_url_field(self):
+        brand = Brand.objects.create(name="Flow Brand", is_active=True)
+
+        response = self.client.get(reverse("brands-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        brands = _items(response.data)
+        target = next(item for item in brands if item["id"] == str(brand.id))
+        self.assertIn("image_url", target)
+        self.assertIsNone(target["image_url"])
+
+    def test_brands_list_returns_uploaded_image_url(self):
+        brand = Brand.objects.create(
+            name="Flow Brand With Image",
+            is_active=True,
+            image="brands/flow-brand.png",
+        )
+
+        response = self.client.get(reverse("brands-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        brands = _items(response.data)
+        target = next(item for item in brands if item["id"] == str(brand.id))
+        self.assertTrue(target["image_url"])
+        self.assertTrue(target["image_url"].endswith("/media/brands/flow-brand.png"))
 
     def test_product_variants_nested_endpoints(self):
         self.client.force_authenticate(self.admin)
@@ -369,6 +396,27 @@ class NestedProductsApiTests(APITestCase):
         self.assertIn("image_url", first_variant)
         self.assertTrue(first_variant["image_url"])
         self.assertTrue(first_variant["image_url"].endswith("/media/products/variants/laptop-black.png"))
+
+    def test_products_list_brand_contains_image_url(self):
+        brand = Brand.objects.create(
+            name="Flow Product Brand",
+            is_active=True,
+            image="brands/flow-product-brand.png",
+        )
+        self.product.brand = brand
+        self.product.save(update_fields=["brand"])
+
+        response = self.client.get(reverse("products-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        products = _items(response.data)
+        target = next(item for item in products if item["id"] == str(self.product.id))
+        self.assertEqual(target["brand"]["id"], str(brand.id))
+        self.assertIn("image_url", target["brand"])
+        self.assertTrue(target["brand"]["image_url"])
+        self.assertTrue(
+            target["brand"]["image_url"].endswith("/media/brands/flow-product-brand.png")
+        )
 
     def test_product_detail_images_use_uploaded_file_url(self):
         ProductImage.objects.create(

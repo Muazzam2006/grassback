@@ -114,7 +114,7 @@ UNFOLD = {
                         "link": reverse_lazy("admin:products_brand_changelist"),
                     },
                     {
-                        "title": _("Характеристики"),
+                        "title": _("Параметры"),
                         "icon": "tune",
                         "link": reverse_lazy("admin:products_productattribute_changelist"),
                     },
