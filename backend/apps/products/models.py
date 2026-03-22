@@ -7,6 +7,8 @@ from django.core.validators import MinValueValidator
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
+from apps.common.utils import convert_image_to_webp
+
 _SLUG_MAX_RETRIES = 20
 
 
@@ -40,6 +42,7 @@ class Brand(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        convert_image_to_webp(self.image)
         if not self.slug:
             base = slugify(self.name)
             for attempt in range(1, _SLUG_MAX_RETRIES + 1):
@@ -86,6 +89,7 @@ class ProductCategory(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        convert_image_to_webp(self.image)
         if not self.slug:
             base = slugify(self.name)
             for attempt in range(1, _SLUG_MAX_RETRIES + 1):
@@ -226,6 +230,10 @@ class ProductImage(models.Model):
     def __str__(self) -> str:
         return f"Image({self.product.name}, primary={self.is_primary})"
 
+    def save(self, *args, **kwargs):
+        convert_image_to_webp(self.image)
+        super().save(*args, **kwargs)
+
 
 class ProductAttribute(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -336,6 +344,7 @@ class ProductVariant(models.Model):
         return f"Артикул: {self.sku}"
 
     def save(self, *args, **kwargs):
+        convert_image_to_webp(self.image)
         if not self.attributes_hash:
             self.attributes_hash = _EMPTY_ATTRIBUTES_HASH
         super().save(*args, **kwargs)
