@@ -59,6 +59,7 @@ LOCAL_APPS = [
     "apps.reservations",
     "apps.notifications",
     "apps.common",
+    "apps.slider",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -117,6 +118,17 @@ UNFOLD = {
                         "title": _("Параметры"),
                         "icon": "tune",
                         "link": reverse_lazy("admin:products_productattribute_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Контент"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Слайдер"),
+                        "icon": "view_carousel",
+                        "link": reverse_lazy("admin:slider_slideritem_changelist"),
                     },
                 ],
             },

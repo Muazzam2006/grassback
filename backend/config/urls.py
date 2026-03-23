@@ -52,6 +52,7 @@ urlpatterns = [
     path("api/v1/mlm/", include("apps.mlm.urls")),                                    
     path("api/v1/", include("apps.delivery.urls")),                                                    
     path("api/v1/", include("apps.reservations.urls")),                             
+    path("api/v1/", include("apps.slider.urls")),
 
                                  
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
